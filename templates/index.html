@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>文本转语音系统</title>
+    <!-- 使用本地Bootstrap CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">文本转语音系统</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link tab-link active" href="#" data-target="ttsPanel">普通语音生成</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link tab-link" href="#" data-target="jianyingPanel">剪映音频替换</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link tab-link" href="#" data-target="jianyingFontPanel">剪映字体更换</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link tab-link" href="#" data-target="historyPanel">生成记录</a>
+                    </li>
+                    <!-- 后续导航项可以在这里添加 -->
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- 文本转语音面板 -->
+        <div class="tab-panel" id="ttsPanel" style="display:block;">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">文本转语音</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="ttsForm">
+                                <div class="mb-3">
+                                    <label for="modelSelect" class="form-label">选择模型</label>
+                                    <select class="form-select" id="modelSelect" name="model" required>
+                                        {% for model in models %}
+                                        <option value="{{ model.path }}" {% if model.path == selected_model %}selected{% endif %}>{{ model.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <input type="hidden" id="selectedVoice" name="voice" value="">
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">参考音频列表</label>
+                                    <div class="table-responsive-sm mobile-table-container">
+                                        <table class="table table-hover table-bordered" id="voiceTable">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th style="width:40px">#</th>
+                                                    <th style="min-width:120px">名称</th>
+                                                    <th style="min-width:150px">试听</th>
+                                                    <th style="min-width:150px">备注</th>
+                                                    <th style="min-width:100px">操作</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for voice in voices %}
+                                                <tr data-voice-path="{{ voice.path }}" data-voice-name="{{ voice.name }}">
+                                                    <td><input type="radio" name="voiceRadio" class="form-check-input" {% if loop.first %}checked{% endif %}></td>
+                                                    <td>{{ voice.name }}</td>
+                                                    <td>
+                                                        <audio src="/audio/{{ voice.path }}" controls class="audio-player w-100"></audio>
+                                                    </td>
+                                                    <td>
+                                                        <input type="text" class="form-control voice-note-input" value="{{ voice.note }}" placeholder="添加备注">
+                                                    </td>
+                                                    <td>
+                                                        <button type="button" class="btn btn-sm btn-outline-primary save-note-btn">保存备注</button>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="textInput" class="form-label">输入文本</label>
+                                    <textarea class="form-control auto-resize" id="textInput" name="text" rows="5" required placeholder="请输入要转换为语音的文本"></textarea>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <button class="btn btn-outline-secondary w-100" type="button" data-bs-toggle="collapse" data-bs-target="#advancedSettings" aria-expanded="false">
+                                        高级参数设置 <i class="bi bi-chevron-down"></i>
+                                    </button>
+                                    <div class="collapse mt-3" id="advancedSettings">
+                                        <div class="card card-body">
+                                            <div class="row mb-3">
+                                                <div class="col-md-6">
+                                                    <label class="form-label">推理模式</label>
+                                                    <select class="form-select" name="infer_mode" id="inferMode">
+                                                        <option value="普通推理">普通推理</option>
+                                                        <option value="批次推理">批次推理 (适合长文本)</option>
+                                                    </select>
+                                                    <div class="form-text">批次推理能显著提高长文本处理速度</div>
+                                                </div>
+                                                <div class="col-md-6" id="bucketSizeContainer" style="display:none">
+                                                    <label for="sentencesBucketMaxSize" class="form-label">分句桶最大容量</label>
+                                                    <input type="range" class="form-range" id="sentencesBucketMaxSize" name="sentences_bucket_max_size" min="1" max="8" value="4">
+                                                    <div class="d-flex justify-content-between">
+                                                        <span>1</span>
+                                                        <span id="bucketSizeValue">4</span>
+                                                        <span>8</span>
+                                                    </div>
+                                                    <div class="form-text">值越大速度越快，但可能影响质量或占用更多显存</div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <label for="maxTextTokensPerSentence" class="form-label">最大分句Token数 <span id="maxTokensValue">120</span></label>
+                                                <input type="range" class="form-range" id="maxTextTokensPerSentence" name="max_text_tokens_per_sentence" min="60" max="200" value="120">
+                                                <div class="d-flex justify-content-between">
+                                                    <span>60</span>
+                                                    <span>120</span>
+                                                    <span>200</span>
+                                                </div>
+                                                <div class="form-text">控制分句长度，值越小分句越短</div>
+                                            </div>
+                                            
+                                            <div class="row mb-3">
+                                                <div class="col-md-6">
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" id="doSample" name="do_sample" checked>
+                                                        <label class="form-check-label" for="doSample">启用采样</label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label for="maxMelTokens" class="form-label">最大生成Token数</label>
+                                                    <input type="number" class="form-control" id="maxMelTokens" name="max_mel_tokens" min="100" max="1000" value="600">
+                                                    <div class="form-text">控制最大生成长度，过小可能截断</div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="row mb-3">
+                                                <div class="col-md-6">
+                                                    <label for="temperature" class="form-label">温度系数 <span id="temperatureValue">1.0</span></label>
+                                                    <input type="range" class="form-range" id="temperature" name="temperature" min="0.1" max="2.0" step="0.1" value="1.0">
+                                                    <div class="form-text">控制生成随机性，值越大越随机</div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label for="topP" class="form-label">Top-P <span id="topPValue">0.8</span></label>
+                                                    <input type="range" class="form-range" id="topP" name="top_p" min="0.1" max="1.0" step="0.1" value="0.8">
+                                                    <div class="form-text">概率阈值采样</div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="row mb-3">
+                                                <div class="col-md-6">
+                                                    <label for="topK" class="form-label">Top-K <span id="topKValue">30</span></label>
+                                                    <input type="range" class="form-range" id="topK" name="top_k" min="0" max="100" step="1" value="30">
+                                                    <div class="form-text">选取最高概率的K个词</div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label for="numBeams" class="form-label">sum_beams <span id="numBeamsValue">3</span></label>
+                                                    <input type="range" class="form-range" id="numBeams" name="num_beams" min="1" max="10" step="1" value="3">
+                                                    <div class="form-text">sum_beams，值越大效果越好但越慢</div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="row mb-3">
+                                                <div class="col-md-6">
+                                                    <label for="repetitionPenalty" class="form-label">重复惩罚 <span id="repetitionPenaltyValue">10.0</span></label>
+                                                    <input type="range" class="form-range" id="repetitionPenalty" name="repetition_penalty" min="1.0" max="20.0" step="0.5" value="10.0">
+                                                    <div class="form-text">防止重复生成</div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label for="lengthPenalty" class="form-label">长度惩罚 <span id="lengthPenaltyValue">0.0</span></label>
+                                                    <input type="range" class="form-range" id="lengthPenalty" name="length_penalty" min="-2.0" max="2.0" step="0.1" value="0.0">
+                                                    <div class="form-text">控制生成长度，负值鼓励短音频</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-primary" id="generateBtn">生成语音</button>
+                                </div>
+                            </form>
+                            
+                            <div class="mt-4" id="resultArea" style="display: none;">
+                                <div class="card">
+                                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                                        <h5 class="card-title mb-0">生成结果</h5>
+                                        <span class="badge bg-light text-dark" id="generationTime">生成耗时: -- 秒</span>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label class="form-label">语音预览</label>
+                                            <audio id="audioPlayer" controls class="w-100"></audio>
+                                        </div>
+                                        <div class="d-grid gap-2">
+                                            <a id="downloadLink" class="btn btn-outline-primary" download>下载语音文件</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-3" id="loadingArea" style="display: none;">
+                                <div class="d-flex justify-content-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">加载中...</span>
+                                    </div>
+                                </div>
+                                <p class="text-center mt-2">正在生成语音，请稍候...</p>
+                            </div>
+                            
+                            <div class="alert alert-danger mt-3" id="errorArea" style="display: none;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 剪映音频替换面板 -->
+        <div class="tab-panel" id="jianyingPanel" style="display:none;">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">剪映音频替换</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="jianyingForm">
+                                <div class="mb-3">
+                                    <label for="projectPath" class="form-label">剪映项目目录</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="projectPath" name="project_path" placeholder="选择或输入剪映项目目录路径" value="{{ jianying_project_dir }}" required>
+                                        <button class="btn btn-outline-secondary" type="button" id="browseBtn">浏览...</button>
+                                        <button class="btn btn-outline-primary" type="button" id="checkProjectBtn">检查</button>
+                                    </div>
+                                    <div class="form-text">一般位于：C:\Users\用户名\AppData\Local\JianyingPro\User Data\Projects\com.lveditor.draft</div>
+                                </div>
+                                
+                                <div class="mb-3" id="projectSelectContainer" style="display:none;">
+                                    <label for="projectSelect" class="form-label">选择工程</label>
+                                    <div class="input-group">
+                                        <select class="form-select" id="projectSelect" name="project_name" required>
+                                            <!-- 工程列表将通过JavaScript动态加载 -->
+                                        </select>
+                                        <button class="btn btn-outline-info" type="button" id="loadProjectBtn">加载工程音频</button>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="jianyingModelSelect" class="form-label">选择模型</label>
+                                    <select class="form-select" id="jianyingModelSelect" name="model" required>
+                                        {% for model in models %}
+                                        <option value="{{ model.path }}" {% if model.path == selected_model %}selected{% endif %}>{{ model.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <input type="hidden" id="jianyingSelectedVoice" name="voice" value="">
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">参考音频列表</label>
+                                    <div class="table-responsive-sm mobile-table-container">
+                                        <table class="table table-hover table-bordered" id="jianyingVoiceTable">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th style="width:40px">#</th>
+                                                    <th style="min-width:120px">名称</th>
+                                                    <th style="min-width:150px">试听</th>
+                                                    <th style="min-width:150px">备注</th>
+                                                    <th style="min-width:100px">操作</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for voice in voices %}
+                                                <tr data-voice-path="{{ voice.path }}" data-voice-name="{{ voice.name }}">
+                                                    <td><input type="radio" name="jianyingVoiceRadio" class="form-check-input" {% if loop.first %}checked{% endif %}></td>
+                                                    <td>{{ voice.name }}</td>
+                                                    <td>
+                                                        <audio src="/audio/{{ voice.path }}" controls class="audio-player w-100"></audio>
+                                                    </td>
+                                                    <td>
+                                                        <input type="text" class="form-control voice-note-input" value="{{ voice.note }}" placeholder="添加备注">
+                                                    </td>
+                                                    <td>
+                                                        <button type="button" class="btn btn-sm btn-outline-primary save-note-btn">保存备注</button>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3" id="projectAudioList" style="display:none;">
+                                    <label class="form-label">项目中的音频列表</label>
+                                    <div class="table-responsive-sm mobile-table-container">
+                                        <table class="table table-hover table-bordered" id="audioListTable">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th style="width:40px"><input type="checkbox" id="selectAllAudios" class="form-check-input"></th>
+                                                    <th style="min-width:120px">名称</th>
+                                                    <th style="min-width:150px">试听</th>
+                                                    <th style="min-width:250px">文本内容</th>
+                                                    <th style="width:80px">状态</th>
+                                                    <th style="width:80px">操作</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="audioListBody">
+                                                <!-- 音频列表将通过JavaScript动态加载 -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-grid gap-2">
+                                    <button type="button" class="btn btn-info" id="loadProjectBtn">加载项目音频</button>
+                                </div>
+
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-primary" id="replaceAudioBtn" style="display:none;">替换选中音频</button>
+                                </div>
+                            </form>
+                            
+                            <div class="mt-3" id="jianyingLoadingArea" style="display: none;">
+                                <div class="d-flex justify-content-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">加载中...</span>
+                                    </div>
+                                </div>
+                                <p class="text-center mt-2">正在处理，请稍候...</p>
+                            </div>
+                            
+                            <div class="alert alert-success mt-3" id="jianyingSuccessArea" style="display: none;"></div>
+                            <div class="alert alert-danger mt-3" id="jianyingErrorArea" style="display: none;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 剪映字体更换面板 -->
+        <div class="tab-panel" id="jianyingFontPanel" style="display:none;">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">剪映字体更换</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="jianyingFontForm">
+                                <div class="mb-3">
+                                    <label for="fontProjectPath" class="form-label">剪映项目目录</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="fontProjectPath" name="project_path" placeholder="选择或输入剪映项目目录路径" value="{{ jianying_project_dir }}" required>
+                                        <button class="btn btn-outline-secondary" type="button" id="fontBrowseBtn">浏览...</button>
+                                        <button class="btn btn-outline-primary" type="button" id="fontCheckProjectBtn">检查</button>
+                                    </div>
+                                    <div class="form-text">一般位于：C:\Users\用户名\AppData\Local\JianyingPro\User Data\Projects\com.lveditor.draft</div>
+                                </div>
+                                
+                                <div class="mb-3" id="fontProjectSelectContainer" style="display:none;">
+                                    <label for="fontProjectSelect" class="form-label">选择工程</label>
+                                    <div class="input-group">
+                                        <select class="form-select" id="fontProjectSelect" name="project_name" required>
+                                            <!-- 工程列表将通过JavaScript动态加载 -->
+                                        </select>
+                                        <button class="btn btn-outline-info" type="button" id="loadFontProjectBtn">加载工程文本</button>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3" id="projectTextList" style="display:none;">
+                                    <label class="form-label">项目中的文本列表</label>
+                                    <div class="table-responsive-sm mobile-table-container">
+                                        <table class="table table-hover table-bordered" id="textListTable">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th style="width:40px"><input type="checkbox" id="selectAllTexts" class="form-check-input"></th>
+                                                    <th style="min-width:120px">文本内容</th>
+                                                    <th style="min-width:150px">字体预览</th>
+                                                    <th style="min-width:200px">选择字体</th>
+                                                    <th style="width:80px">操作</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="textListBody">
+                                                <!-- 文本列表将通过JavaScript动态加载 -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-primary" id="replaceFontBtn" style="display:none;">更换选中文本字体</button>
+                                </div>
+                            </form>
+                            
+                            <div class="mt-3" id="fontLoadingArea" style="display: none;">
+                                <div class="d-flex justify-content-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">加载中...</span>
+                                    </div>
+                                </div>
+                                <p class="text-center mt-2">正在处理，请稍候...</p>
+                            </div>
+                            
+                            <div class="alert alert-success mt-3" id="fontSuccessArea" style="display: none;"></div>
+                            <div class="alert alert-danger mt-3" id="fontErrorArea" style="display: none;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 生成记录面板 -->
+        <div class="tab-panel" id="historyPanel" style="display:none;">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">生成记录</h5>
+                            <span class="badge bg-light text-dark" id="recordCount">共 {{ history|length }} 条记录</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive-sm mobile-table-container">
+                                <table class="table table-hover table-bordered" id="historyTable">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="min-width:120px">时间</th>
+                                            <th style="min-width:80px">模型</th>
+                                            <th style="min-width:120px">参考音频</th>
+                                            <th style="min-width:90px">生成耗时</th>
+                                            <th style="min-width:200px">文本</th>
+                                            <th style="min-width:200px">操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for record in history %}
+                                        <tr data-record-id="{{ record.id }}">
+                                            <td>{{ record.timestamp }}</td>
+                                            <td>{{ record.model }}</td>
+                                            <td>{{ record.voice }}</td>
+                                            <td>{{ record.generation_time if record.generation_time else '--' }} 秒</td>
+                                            <td class="text-truncate" title="{{ record.full_text }}">{{ record.text }}</td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm flex-wrap" role="group">
+                                                    <button type="button" class="btn btn-sm btn-outline-primary play-record-btn" data-output-file="{{ record.output_file }}">播放</button>
+                                                    <a href="/{{ record.output_file }}" download class="btn btn-sm btn-outline-success">下载</a>
+                                                    <button type="button" class="btn btn-sm btn-outline-info view-text-btn" data-text="{{ record.full_text }}">查看文本</button>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger delete-record-btn">删除</button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <!-- 无记录提示 -->
+                            {% if history|length == 0 %}
+                            <div class="alert alert-info">
+                                <p class="mb-0 text-center">暂无生成记录</p>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- 音频播放器 -->
+                            <div class="mt-3" id="historyPlayerArea" style="display: none;">
+                                <div class="card">
+                                    <div class="card-header bg-primary text-white">
+                                        <h6 class="mb-0">播放历史记录</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <audio id="historyPlayer" controls class="w-100"></audio>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 文本查看模态框 -->
+                            <div class="modal fade" id="textModal" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">文本内容</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <textarea class="form-control auto-resize" id="modalTextContent" rows="10" readonly></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加页面底部剪映下载链接 -->
+    <div class="container-fluid mt-5 py-3 bg-light">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12 text-center">
+                    <p class="mb-1">
+                        <strong>下载剪映5.9：</strong>
+                        <a href="https://pan.baidu.com/s/17Km2PNBO8lYXsMJGHYFpMA?pwd=0000" target="_blank" class="text-decoration-none">百度网盘下载 (提取码: 0000)</a>
+                    </p>
+                    <p class="text-muted small">© 2025 文本转语音系统</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 使用本地jQuery和Bootstrap Bundle JS -->
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jianying.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jianying-font.js') }}"></script>
+    
+    <!-- 自定义标签页切换脚本 -->
+    <script>
+        $(document).ready(function() {
+            // 标签页切换
+            $('.tab-link').on('click', function(e) {
+                e.preventDefault();
+                
+                // 获取目标面板ID
+                var targetId = $(this).data('target');
+                
+                // 隐藏所有面板
+                $('.tab-panel').hide();
+                
+                // 显示目标面板
+                $('#' + targetId).show();
+                
+                // 更新导航项状态
+                $('.tab-link').removeClass('active');
+                $(this).addClass('active');
+            });
+
+            // 更新参数显示值
+            $('#temperature').on('input', function() {
+                $('#temperatureValue').text($(this).val());
+            });
+            
+            $('#topP').on('input', function() {
+                $('#topPValue').text($(this).val());
+            });
+            
+            $('#topK').on('input', function() {
+                $('#topKValue').text($(this).val());
+            });
+            
+            $('#numBeams').on('input', function() {
+                $('#numBeamsValue').text($(this).val());
+            });
+            
+            $('#repetitionPenalty').on('input', function() {
+                $('#repetitionPenaltyValue').text($(this).val());
+            });
+            
+            $('#lengthPenalty').on('input', function() {
+                $('#lengthPenaltyValue').text($(this).val());
+            });
+            
+            $('#maxTextTokensPerSentence').on('input', function() {
+                $('#maxTokensValue').text($(this).val());
+            });
+            
+            $('#sentencesBucketMaxSize').on('input', function() {
+                $('#bucketSizeValue').text($(this).val());
+            });
+            
+            // 推理模式变更时显示/隐藏分句桶设置
+            $('#inferMode').on('change', function() {
+                if ($(this).val() === '批次推理') {
+                    $('#bucketSizeContainer').show();
+                } else {
+                    $('#bucketSizeContainer').hide();
+                }
+            });
+        });
+    </script>
+</body>
+</html> 
