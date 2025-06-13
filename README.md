@@ -10,13 +10,10 @@
   </a>
   <p style="margin: 8px 0 0; color: #666;">IndexTTS 是一种主要基于 XTTS 和 Tortoise 的 GPT 风格的文本转语音 （TTS） 模型。它能够使用拼音纠正汉字的发音，并通过标点符号控制任何位置的停顿。我们增强了系统的多个模块，包括扬声器条件特征表示的改进，以及 BigVGAN2 的集成以优化音频质量。</p>
 </div>
-> [!NOTE]
->
-> 1.参考音频在：model/checkpoints/voice
->
-> 2.默认生成音频文件在：static/ouput
->
-> 3.使用的剪映版本是5.9，大于5.9的无法使用
+
+- 1.参考音频在：model/checkpoints/voice
+- 2.默认生成音频文件在：static/ouput
+- 3.使用的剪映版本是5.9，大于5.9的无法使用
 
 
 
@@ -50,7 +47,7 @@ pip install WeTextProcessing --no-deps
 
 然后我们需要安装index-tts依赖（这个是从index-tts直接下载下来的，使用终端进入该文件夹，且在index-tts的conda环境中运行命令）
 
-![image-20250613101631184](./static/images/two.png)
+<img src="./static/images/two.png" alt="" style="max-width:100%; height:auto;">
 
 ```
 pip install -e .
@@ -82,7 +79,7 @@ pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 pip install deepseed
 ```
 
-![one](.\static\images\one.png)
+<img src=".\static\images\one.png" alt="deepspeed安装失败" style="max-width:100%; height:auto;">
 
 然后发现报错
 
@@ -117,6 +114,7 @@ set DS_BUILD_OPS=0
 3. 确保参考音频文件已放置在 `model/checkpoints/voice` 目录下
 
 4. 运行应用程序：
+
    ```
    python app.py
    ```
@@ -125,11 +123,11 @@ set DS_BUILD_OPS=0
 
 6. 剪映如何替换音频(草稿随便使用一个声音来朗诵，这样生成的音频位置会记住，可以减少代码及混乱，替换后会自动计算音频时长)
 
-   ![three](.\static\images\three.png)
+   <img src=".\static\images\three.png" alt="" style="max-width:100%; height:auto;">
 
    效果(我还没有下载模型)：
 
-   ![four](.\static\images\four.png)
+   <img src=".\static\images\four.png" alt="" style="max-width:100%; height:auto;">
 
 # 交流：
 
@@ -141,16 +139,16 @@ QQ交流群：700598581
 
 # 赞赏：
 
-*   **底部温和呼吁 (最推荐)：**
-    
-    *   `如果这个项目帮助了你，一个 ⭐️ Star 是对我们最大的鼓励！`
-    *   `觉得这个项目有用？点个 Star ⭐️ 让它被更多人发现吧！`
-    *   `喜欢这个项目？欢迎 Star ⭐️、Fork 🍴 或分享给有需要的朋友！你的认可是我们持续改进的动力。`
-    *   `项目的发展离不开社区的反馈和支持。如果你在使用中有任何建议，或者想表达支持，欢迎点个 Star ⭐️ 或 [提交 Issue/PR](链接)。`
-    
-    
+* **底部温和呼吁 (最推荐)：**
 
-![nice](.\static\images\nice.png)
+  *   `如果这个项目帮助了你，一个 ⭐️ Star 是对我们最大的鼓励！`
+  *   `觉得这个项目有用？点个 Star ⭐️ 让它被更多人发现吧！`
+  *   `喜欢这个项目？欢迎 Star ⭐️、Fork 🍴 或分享给有需要的朋友！你的认可是我们持续改进的动力。`
+  *   `项目的发展离不开社区的反馈和支持。如果你在使用中有任何建议，或者想表达支持，欢迎点个 Star ⭐️ 或 [提交 Issue/PR](链接)。`
+
+  
+
+<img src=".\static\images\nice.png" alt="赞赏" style="max-width:100%; height:auto;">
 
 
 
