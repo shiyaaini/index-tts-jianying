@@ -56,7 +56,7 @@ pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 
 
-# 安装依赖提醒
+# 安装依赖提醒（没有显卡的朋友不用看）
 
 ### 问题1：
 
