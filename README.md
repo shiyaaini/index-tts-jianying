@@ -28,7 +28,8 @@
 ## 📋 项目简介
 
 在此感谢哔哩哔哩：
-
+通过网盘分享的文件（项目+模型）：github
+链接: https://pan.baidu.com/s/1DJFfS14bGSC0ZAq9E-rBMg?pwd=6666 提取码: 6666 
 <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px; margin: 10px 0; background-color: #f8f9fa;">
   <a href="https://github.com/index-tts/index-tts" target="_blank" style="text-decoration: none; color: #0969da; font-weight: bold;">
     index-tts
@@ -213,11 +214,7 @@ python app.py
 <img src="./static/images/three.png" alt="剪映替换步骤" style="max-width:80%; height:auto;">
 </div>
 
-效果展示（模型未下载时的界面）：
 
-<div align="center">
-<img src="./static/images/four.png" alt="效果展示" style="max-width:80%; height:auto;">
-</div>
 
 ## 🎵 去除伴奏
 
