@@ -215,11 +215,7 @@ python app.py
 <img src="./static/images/three.png" alt="剪映替换步骤" style="max-width:80%; height:auto;">
 </div>
 
-效果展示（模型未下载时的界面）：
 
-<div align="center">
-<img src="./static/images/four.png" alt="效果展示" style="max-width:80%; height:auto;">
-</div>
 
 ## 🎵 去除伴奏
 
