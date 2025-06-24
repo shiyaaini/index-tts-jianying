@@ -76,6 +76,44 @@ $(document).ready(function() {
                 displayProjectTexts(response.texts);
                 $('#projectTextList').show();
                 $('#replaceFontBtn').show();
+                $('#exportSubtitlesBtn').show();
+            } else {
+                showFontError(response.error);
+            }
+        });
+    });
+    
+    // 导出字幕为TXT
+    $('#exportSubtitlesBtn').click(function() {
+        const projectDir = $('#fontProjectPath').val();
+        const projectName = $('#fontProjectSelect').val();
+        
+        if (!projectDir || !projectName) {
+            showFontError('请选择项目目录和工程');
+            return;
+        }
+        
+        $('#fontLoadingArea').show();
+        $.post('/export_jianying_subtitles', {
+            project_dir: projectDir,
+            project_name: projectName
+        }, function(response) {
+            $('#fontLoadingArea').hide();
+            if (response.success) {
+                // 创建一个blob对象
+                const blob = new Blob([response.subtitles_text], {type: 'text/plain;charset=utf-8'});
+                
+                // 创建下载链接
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `${projectName}_字幕.txt`;
+                
+                // 触发下载
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showFontSuccess('字幕导出成功');
             } else {
                 showFontError(response.error);
             }

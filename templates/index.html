@@ -27,6 +27,9 @@
                         <a class="nav-link tab-link" href="#" data-target="jianyingFontPanel">剪映字体更换</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link tab-link" href="#" data-target="jianyingScriptPanel">剪映文案</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link tab-link" href="#" data-target="historyPanel">生成记录</a>
                     </li>
                     <!-- 后续导航项可以在这里添加 -->
@@ -93,7 +96,7 @@
                                 
                                 <div class="mb-3">
                                     <label for="textInput" class="form-label">输入文本</label>
-                                    <textarea class="form-control auto-resize" id="textInput" name="text" rows="5" required placeholder="请输入要转换为语音的文本"></textarea>
+                                    <textarea class="form-control auto-resize scrollable-textarea" id="textInput" name="text" rows="5" required placeholder="请输入要转换为语音的文本"></textarea>
                                 </div>
                                 
                                 <div class="mb-3">
@@ -404,6 +407,10 @@
                                 <div class="d-grid gap-2">
                                     <button type="submit" class="btn btn-primary" id="replaceFontBtn" style="display:none;">更换选中文本字体</button>
                                 </div>
+                                
+                                <div class="d-grid gap-2 mt-2">
+                                    <button type="button" class="btn btn-success" id="exportSubtitlesBtn" style="display:none;">导出项目字幕为TXT</button>
+                                </div>
                             </form>
                             
                             <div class="mt-3" id="fontLoadingArea" style="display: none;">
@@ -417,6 +424,153 @@
                             
                             <div class="alert alert-success mt-3" id="fontSuccessArea" style="display: none;"></div>
                             <div class="alert alert-danger mt-3" id="fontErrorArea" style="display: none;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 剪映文案面板 -->
+        <div class="tab-panel" id="jianyingScriptPanel" style="display:none;">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">剪映文案</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="jianyingScriptForm">
+                                <div class="mb-3">
+                                    <label for="scriptProjectPath" class="form-label">剪映项目目录</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="scriptProjectPath" name="project_path" placeholder="选择或输入剪映项目目录路径" value="{{ jianying_project_dir }}" required>
+                                        <button class="btn btn-outline-secondary" type="button" id="scriptBrowseBtn">浏览...</button>
+                                        <button class="btn btn-outline-primary" type="button" id="scriptCheckProjectBtn">检查</button>
+                                    </div>
+                                    <div class="form-text">一般位于：C:\Users\用户名\AppData\Local\JianyingPro\User Data\Projects\com.lveditor.draft</div>
+                                </div>
+                                
+                                <div class="mb-3" id="scriptProjectSelectContainer" style="display:none;">
+                                    <label for="scriptProjectSelect" class="form-label">选择工程</label>
+                                    <div class="input-group">
+                                        <select class="form-select" id="scriptProjectSelect" name="project_name" required>
+                                            <!-- 工程列表将通过JavaScript动态加载 -->
+                                        </select>
+                                        <button class="btn btn-outline-info" type="button" id="loadScriptProjectBtn">加载工程</button>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3" id="aiScriptContainer">
+                                    <label class="form-label">AI文案生成</label>
+                                    <div class="input-group mb-3">
+                                        <input type="password" class="form-control" id="deepseekApiKey" name="deepseek_api_key" placeholder="输入DeepSeek API Key" value="{{ deepseek_api_key }}">
+                                        <button class="btn btn-outline-secondary" type="button" id="saveApiKeyBtn">保存</button>
+                                    </div>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="aiScriptPrompt" name="ai_prompt" placeholder="输入AI提示词，如'写一段关于春天的诗'">
+                                        <button class="btn btn-outline-primary" type="button" id="generateAiScriptBtn">生成文案</button>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="scriptTextarea" class="form-label">文案内容</label>
+                                    <textarea class="form-control auto-resize scrollable-textarea" id="scriptTextarea" name="script_text" rows="10" placeholder="输入或粘贴文案内容"></textarea>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">文本切分方式</label>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="scriptSplitMode" id="splitByPeriod" value="period" checked>
+                                            <label class="form-check-label" for="splitByPeriod">按句号切分</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="scriptSplitMode" id="splitByComma" value="comma">
+                                            <label class="form-check-label" for="splitByComma">按逗号切分</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="scriptSplitMode" id="splitByFourSentences" value="four">
+                                            <label class="form-check-label" for="splitByFourSentences">四句一切</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="scriptSplitMode" id="splitByCustom" value="custom">
+                                            <label class="form-check-label" for="splitByCustom">自定义</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3" id="customSplitContainer" style="display:none;">
+                                    <label for="customSplitChars" class="form-label">自定义切分字符</label>
+                                    <input type="text" class="form-control" id="customSplitChars" name="custom_split_chars" placeholder="输入切分字符，如'。，！？'">
+                                </div>
+
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="calculateDurationByChar" name="calculate_duration_by_char">
+                                    <label class="form-check-label" for="calculateDurationByChar">
+                                        按字数计算时长
+                                    </label>
+                                </div>
+
+                                <div class="mb-3" id="charDurationContainer" style="display:none;">
+                                    <label for="msPerChar" class="form-label">每字时长（毫秒）</label>
+                                    <input type="number" class="form-control" id="msPerChar" name="ms_per_char" min="50" max="1000" value="300" placeholder="输入每个字的时长（毫秒）">
+                                    <div class="form-text">默认每字300毫秒（0.3秒）</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="fontSizeSelect" class="form-label">字体大小设置</label>
+                                    <select class="form-select" id="fontSizeSelect" name="font_size">
+                                        <option value="6.0">6.0（适合16:9横屏视频）</option>
+                                        <option value="10.0">10.0（适合9:16竖屏视频）</option>
+                                        <option value="8.0">8.0（中等大小）</option>
+                                        <option value="custom">自定义...</option>
+                                    </select>
+                                    <div class="form-text">根据视频比例选择合适的字体大小</div>
+                                </div>
+
+                                <div class="mb-3" id="customFontSizeContainer" style="display:none;">
+                                    <label for="customFontSize" class="form-label">自定义字体大小</label>
+                                    <input type="number" class="form-control" id="customFontSize" name="custom_font_size" min="1" max="20" step="0.1" value="6.0">
+                                </div>
+
+                                <div class="d-grid gap-2">
+                                    <button type="button" class="btn btn-info" id="splitScriptBtn">切分文案</button>
+                                </div>
+
+                                <div class="mb-3 mt-3" id="scriptSegmentsContainer" style="display:none;">
+                                    <label class="form-label">切分结果</label>
+                                    <div class="table-responsive-sm mobile-table-container">
+                                        <table class="table table-hover table-bordered" id="scriptSegmentsTable">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th style="width:40px">#</th>
+                                                    <th style="min-width:350px">文本内容</th>
+                                                    <th style="min-width:100px">预计时长</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="scriptSegmentsBody">
+                                                <!-- 切分结果将在这里显示 -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    
+                                    <div class="d-grid gap-2 mt-3">
+                                        <button type="button" class="btn btn-primary" id="importScriptBtn">导入到剪映</button>
+                                    </div>
+                                </div>
+                            </form>
+                            
+                            <div class="mt-3" id="scriptLoadingArea" style="display: none;">
+                                <div class="d-flex justify-content-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">加载中...</span>
+                                    </div>
+                                </div>
+                                <p class="text-center mt-2">正在处理，请稍候...</p>
+                            </div>
+                            
+                            <div class="alert alert-success mt-3" id="scriptSuccessArea" style="display: none;"></div>
+                            <div class="alert alert-danger mt-3" id="scriptErrorArea" style="display: none;"></div>
                         </div>
                     </div>
                 </div>
@@ -522,6 +676,8 @@
                         <a href="https://pan.baidu.com/s/17Km2PNBO8lYXsMJGHYFpMA?pwd=0000" target="_blank" class="text-decoration-none">百度网盘下载 (提取码: 0000)</a>
                     </p>
                     <p class="text-muted small">© 2025 文本转语音系统</p>
+                    <p class="text-muted small">Powered by <a href="https://github.com/shiyaaini/index-tts-jianying" target="_blank" class="text-decoration-none">index-tts-jianying</a></p>
+                    <p class="text-muted small">哔哩哔哩<a href="https://b23.tv/jwLEJzG" target="_blank" class="text-decoration-none"> 浅若红尘</a></p>
                 </div>
             </div>
         </div>
@@ -533,6 +689,7 @@
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
     <script src="{{ url_for('static', filename='js/jianying.js') }}"></script>
     <script src="{{ url_for('static', filename='js/jianying-font.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jianying-script.js') }}"></script>
     
     <!-- 自定义标签页切换脚本 -->
     <script>
@@ -596,6 +753,50 @@
                     $('#bucketSizeContainer').hide();
                 }
             });
+            
+            // 按字数计算时长选项变更时显示/隐藏每字时长设置
+            $('#calculateDurationByChar').on('change', function() {
+                if ($(this).is(':checked')) {
+                    $('#charDurationContainer').show();
+                } else {
+                    $('#charDurationContainer').hide();
+                }
+            });
+
+            // 文本框自适应高度
+            function autoResizeTextarea(textarea) {
+                textarea.style.height = 'auto';
+                const maxHeight = 300; // 设置最大高度为300px
+                
+                // 如果内容高度超过最大高度，则启用滚动条
+                if (textarea.scrollHeight > maxHeight) {
+                    textarea.style.height = maxHeight + 'px';
+                    textarea.style.overflowY = 'auto';
+                } else {
+                    textarea.style.height = textarea.scrollHeight + 'px';
+                    textarea.style.overflowY = 'hidden';
+                }
+            }
+
+            // 绑定文本框自适应高度事件
+            $(document).on('input', '.auto-resize', function() {
+                autoResizeTextarea(this);
+            });
+
+            // 页面加载完成后，触发所有自适应高度文本框
+            $('.auto-resize').each(function() {
+                autoResizeTextarea(this);
+            });
+            
+            // 添加滚动条样式
+            const style = document.createElement('style');
+            style.textContent = `
+                .scrollable-textarea {
+                    max-height: 300px;
+                    overflow-y: auto;
+                }
+            `;
+            document.head.appendChild(style);
         });
     </script>
 </body>

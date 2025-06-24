@@ -197,6 +197,17 @@ def save_jianying_project_dir(project_dir):
     config["jianying_project_dir"] = project_dir
     save_config(config)
 
+# 保存DeepSeek API Key
+def save_deepseek_api_key(api_key):
+    config = load_config()
+    config["deepseek_api_key"] = api_key
+    save_config(config)
+
+# 读取DeepSeek API Key
+def get_deepseek_api_key():
+    config = load_config()
+    return config.get("deepseek_api_key", "")
+
 @app.route('/')
 def index():
     models = load_models()
@@ -209,13 +220,15 @@ def index():
     # 加载配置信息
     config = load_config()
     jianying_project_dir = config.get("jianying_project_dir", "")
+    deepseek_api_key = config.get("deepseek_api_key", "")
     
     return render_template('index.html', 
                           models=models, 
                           voices=voices, 
                           selected_model=default_model, 
                           history=history,
-                          jianying_project_dir=jianying_project_dir)
+                          jianying_project_dir=jianying_project_dir,
+                          deepseek_api_key=deepseek_api_key)
 
 @app.route('/get_voices', methods=['GET'])
 def get_voices():
@@ -841,6 +854,51 @@ def get_available_fonts():
             'error': str(e)
         })
 
+@app.route('/export_jianying_subtitles', methods=['POST'])
+def export_jianying_subtitles():
+    """导出剪映项目字幕为TXT的路由"""
+    try:
+        project_dir = request.form.get('project_dir')
+        project_name = request.form.get('project_name')
+        
+        if not project_dir or not project_name:
+            return jsonify({
+                'success': False,
+                'error': '请提供项目目录和工程名称'
+            })
+            
+        texts, error = load_jianying_text_info(project_dir, project_name)
+        if error:
+            return jsonify({
+                'success': False,
+                'error': error
+            })
+        
+        # 提取每个字幕的文本内容并拼接
+        subtitles_text = ""
+        for text_info in texts:
+            content = text_info.get('content', '')
+            try:
+                # 尝试解析JSON提取文本
+                content_data = json.loads(content)
+                text_content = content_data.get('text', '')
+                if text_content:
+                    subtitles_text += text_content + "\n\n"
+            except:
+                # 如果解析失败，直接使用内容
+                if content:
+                    subtitles_text += content + "\n\n"
+        
+        return jsonify({
+            'success': True,
+            'subtitles_text': subtitles_text
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
+
 def load_jianying_text_info(project_dir, project_name):
     """加载剪映项目中的文本信息"""
     try:
@@ -979,7 +1037,431 @@ def replace_jianying_font_route():
 def serve_font(filename):
     return send_from_directory('font', filename)
 
+@app.route('/split_script', methods=['POST'])
+def split_script():
+    try:
+        script_text = request.form.get('script_text')
+        split_mode = request.form.get('split_mode', 'period')
+        custom_split_chars = request.form.get('custom_split_chars', '')
+        calculate_duration = request.form.get('calculate_duration', 'false').lower() == 'true'
+        
+        if not script_text:
+            return jsonify({"error": "文案内容不能为空"}), 400
+        
+        # 根据切分模式选择切分字符
+        split_chars = []
+        if split_mode == 'period':
+            split_chars = ['。', '！', '？', '!', '?', '.']
+        elif split_mode == 'comma':
+            split_chars = ['，', '；', ',', ';']
+        elif split_mode == 'custom':
+            if not custom_split_chars:
+                return jsonify({"error": "自定义切分字符不能为空"}), 400
+            split_chars = list(custom_split_chars)
+        
+        # 分割文本
+        segments = []
+        
+        if split_mode == 'four':
+            # 按四句一切分
+            lines = [line.strip() for line in script_text.splitlines() if line.strip()]
+            for i in range(0, len(lines), 4):
+                chunk = lines[i:i+4]
+                text = '\n'.join(chunk)
+                
+                duration = None
+                if calculate_duration:
+                    # 计算字符数（不含空白字符）
+                    char_count = len(''.join(chunk).replace(' ', '').replace('\n', '').replace('\t', ''))
+                    # 每个字0.3秒
+                    duration = int(char_count * 0.3 * 1000000)  # 转换为微秒
+                
+                segments.append({
+                    'text': text,
+                    'duration': duration
+                })
+        else:
+            # 按标点符号切分
+            current_segment = ""
+            
+            for char in script_text:
+                current_segment += char
+                
+                if char in split_chars:
+                    # 处理切分后的文本段落
+                    text = current_segment.strip()
+                    if text:
+                        duration = None
+                        if calculate_duration:
+                            # 计算字符数（不含空白字符）
+                            char_count = len(text.replace(' ', '').replace('\n', '').replace('\t', ''))
+                            # 每个字0.3秒
+                            duration = int(char_count * 0.3 * 1000000)  # 转换为微秒
+                        
+                        segments.append({
+                            'text': text,
+                            'duration': duration
+                        })
+                    current_segment = ""
+            
+            # 处理最后一段文本（如果不以分隔符结尾）
+            if current_segment.strip():
+                text = current_segment.strip()
+                duration = None
+                if calculate_duration:
+                    char_count = len(text.replace(' ', '').replace('\n', '').replace('\t', ''))
+                    duration = int(char_count * 0.3 * 1000000)
+                
+                segments.append({
+                    'text': text,
+                    'duration': duration
+                })
+        
+        return jsonify({
+            "success": True,
+            "segments": segments
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/generate_ai_script', methods=['POST'])
+def generate_ai_script():
+    try:
+        prompt = request.form.get('prompt')
+        if not prompt:
+            return jsonify({"error": "提示词不能为空"}), 400
+        
+        # 获取API Key
+        api_key = get_deepseek_api_key()
+        if not api_key:
+            return jsonify({"error": "请先设置DeepSeek API Key"}), 400
+        
+        # 调用DeepSeek API生成文案
+        from openai import OpenAI
+        
+        client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
+        
+        response = client.chat.completions.create(
+            model="deepseek-chat",
+            messages=[
+                {"role": "system", "content": "你是一个专业的文案撰写助手，请根据用户的要求创作高质量的文案。"},
+                {"role": "user", "content": prompt},
+            ],
+            stream=False
+        )
+        
+        script = response.choices[0].message.content
+        
+        return jsonify({
+            "success": True,
+            "script": script
+        })
+    except Exception as e:
+        return jsonify({"error": f"生成文案失败: {str(e)}"}), 500
+
+@app.route('/save_deepseek_api_key', methods=['POST'])
+def save_api_key_route():
+    api_key = request.form.get('api_key')
+    if not api_key:
+        return jsonify({"error": "API Key不能为空"}), 400
+    
+    try:
+        save_deepseek_api_key(api_key)
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/import_script_to_jianying', methods=['POST'])
+def import_script_to_jianying():
+    try:
+        project_dir = request.form.get('project_dir')
+        project_name = request.form.get('project_name')
+        segments_json = request.form.get('segments')
+        font_size = float(request.form.get('font_size', 6.0))
+
+        
+        if not all([project_dir, project_name, segments_json]):
+            return jsonify({"error": "缺少必要参数"}), 400
+        
+        # 解析段落数据
+        try:
+            segments = json.loads(segments_json)
+        except:
+            return jsonify({"error": "解析段落数据失败"}), 400
+        
+        if not segments:
+            return jsonify({"error": "没有有效的文案段落"}), 400
+        
+        # 导入到剪映
+        draft_file = os.path.join(project_dir, project_name, 'draft_content.json')
+        if not os.path.exists(draft_file):
+            return jsonify({"error": "找不到剪映项目文件"}), 400
+        
+        # 读取项目文件
+        with open(draft_file, 'r', encoding='utf-8') as f:
+            draft_data = json.load(f)
+        
+        # 备份原始文件
+        backup_path = f"{draft_file}.scriptbak"
+        shutil.copy(draft_file, backup_path)
+        
+        # 计算视频时间线总时长
+        current_duration = draft_data.get('duration', 0)
+        
+        # 获取最后一个轨道元素的结束时间
+        tracks = draft_data.get('tracks', [])
+        text_track = None
+        audio_track = None
+        
+        # 查找文本轨道和音频轨道
+        for track in tracks:
+            if track.get('type') == 'text':
+                text_track = track
+            elif track.get('type') == 'audio':
+                audio_track = track
+        
+        # 如果没有文本轨道，创建一个
+        if not text_track:
+            text_track = {
+                "attribute": 0,
+                "flag": 0,
+                "id": str(uuid.uuid4()).upper(),
+                "is_default_name": True,
+                "name": "",
+                "segments": [],
+                "type": "text"
+            }
+            tracks.append(text_track)
+        
+        # 如果没有音频轨道，创建一个
+        if not audio_track:
+            audio_track = {
+                "attribute": 0,
+                "flag": 0,
+                "id": str(uuid.uuid4()).upper(),
+                "is_default_name": True,
+                "name": "",
+                "segments": [],
+                "type": "audio"
+            }
+            tracks.append(audio_track)
+        
+        # 找到最后一个元素的结束时间
+        last_end_time = 0
+        for track in tracks:
+            for segment in track.get('segments', []):
+                if 'target_timerange' in segment:
+                    segment_end = segment['target_timerange']['start'] + segment['target_timerange']['duration']
+                    if segment_end > last_end_time:
+                        last_end_time = segment_end
+        
+        # 更新材料库
+        materials = draft_data.get('materials', {})
+        
+        # 文本材料库
+        texts = materials.get('texts', [])
+        
+        # 音频材料库
+        audios = materials.get('audios', [])
+        
+        # 动画材料库
+        animations = materials.get('material_animations', [])
+        
+        # 处理每个段落
+        start_time = last_end_time
+        text_segments = []
+        audio_segments = []
+        
+        for segment in segments:
+            text_content = segment.get('text', '').strip()
+            if not text_content:
+                continue
+                
+            # 获取时长（微秒）
+            duration = segment.get('duration')
+            if not duration:
+                # 如果没有指定时长，按每字0.3秒计算
+                char_count = len(text_content.replace(' ', '').replace('\n', '').replace('\t', ''))
+                duration = int(char_count * 0.3 * 1000000)  # 转换为微秒
+            
+            # 创建新的文本ID
+            text_id = str(uuid.uuid4()).upper()
+            
+            # 创建新的音频ID
+            audio_id = str(uuid.uuid4()).upper()
+            
+            # 创建文本内容JSON
+            #获取当前绝对路径
+            current_path = os.path.abspath(os.path.dirname(__file__))
+            #获取字体路径
+            font_path=f"{current_path}/static/simkai.ttf"
+            text_json = {
+                "text": text_content,
+                "styles": [{
+                    "fill": {"content": {"solid": {"color": [1, 1, 1]}}},
+                    "font": {"path": font_path, "id": ""},
+                    "size": font_size,
+                    "range": [0, len(text_content)]
+                }]
+            }
+            
+            # 添加到文本材料库
+            text_item = {
+                "add_type": 0,
+                "alignment": 1,
+                "background_alpha": 1,
+                "background_color": "",
+                "background_height": 0.14,
+                "background_horizontal_offset": 0,
+                "background_round_radius": 0,
+                "background_style": 0,
+                "background_vertical_offset": 0,
+                "background_width": 0.14,
+                "base_content": "",
+                "bold_width": 0,
+                "border_alpha": 1,
+                "border_color": "",
+                "border_width": 0.08,
+                "caption_template_info": {},
+                "check_flag": 7,
+                "combo_info": {"text_templates": []},
+                "content": json.dumps(text_json),
+                "fixed_height": -1,
+                "fixed_width": -1,
+                "font_name": "zh-hans",
+                "font_path": font_path,
+                "font_size": "10.33333333333341",
+                "global_alpha": 1,
+                "id": text_id,
+                "letter_spacing": 0,
+                "line_feed": 1,
+                "line_max_width": 0.82,
+                "line_spacing": 0.02,
+                "text_alpha": 1,
+                "text_color": "#FFFFFF",
+                "text_size": 30,
+                "text_to_audio_ids": [audio_id],
+                "type": "text"
+            }
+            
+            texts.append(text_item)
+            
+            # 添加到音频材料库
+            audio_path_dir = os.path.join(project_dir, project_name, 'textReading')
+            #判断文件是否存在
+            if not os.path.exists(audio_path_dir):
+                os.makedirs(audio_path_dir)
+            audio_path = f"{audio_path_dir}/{audio_id.lower()}.wav"
+            audio_item = {
+                "app_id": 0,
+                "check_flag": 1,
+                "duration": duration,
+                "id": audio_id,
+                "name": text_content[:20] + ("..." if len(text_content) > 20 else ""),
+                "path": audio_path,
+                "text_id": text_id,
+                "type": "text_to_audio"
+            }
+            
+            audios.append(audio_item)
+            
+            # 添加动画
+            animation_id = str(uuid.uuid4()).upper()
+            animation_item = {
+                "animations": [],
+                "id": animation_id,
+                "multi_language_current": "none",
+                "type": "sticker_animation"
+            }
+            
+            animations.append(animation_item)
+            
+            # 添加到轨道
+            text_segment = {
+                "caption_info": None,
+                "cartoon": False,
+                "clip": {
+                    "alpha": 1,
+                    "flip": {"horizontal": False, "vertical": False},
+                    "rotation": 0,
+                    "scale": {"x": 1, "y": 1},
+                    "transform": {"x": 0, "y": -0.7721662468513853}
+                },
+                "common_keyframes": [],
+                "enable_adjust": False,
+                "extra_material_refs": [animation_id],
+                "group_id": "",
+                "id": str(uuid.uuid4()).upper(),
+                "material_id": text_id,
+                "render_index": 14000 + len(text_segments),
+                "target_timerange": {
+                    "duration": duration,
+                    "start": start_time
+                },
+                "track_attribute": 0,
+                "track_render_index": 1,
+                "uniform_scale": {"on": True, "value": 1},
+                "visible": True,
+                "volume": 1
+            }
+            
+            audio_segment = {
+                "caption_info": None,
+                "cartoon": False,
+                "clip": None,
+                "common_keyframes": [],
+                "enable_adjust": False,
+                "group_id": "",
+                "id": str(uuid.uuid4()).upper(),
+                "material_id": audio_id,
+                "render_index": 0,
+                "source_timerange": {
+                    "duration": duration,
+                    "start": 0
+                },
+                "target_timerange": {
+                    "duration": duration,
+                    "start": start_time
+                },
+                "track_attribute": 0,
+                "track_render_index": 0,
+                "visible": True,
+                "volume": 1
+            }
+            
+            text_segments.append(text_segment)
+            audio_segments.append(audio_segment)
+            
+            # 更新下一段的开始时间
+            start_time += duration
+        
+        # 将新段落添加到轨道
+        text_track['segments'].extend(text_segments)
+        audio_track['segments'].extend(audio_segments)
+        
+        # 更新材料库
+        materials['texts'] = texts
+        materials['audios'] = audios
+        materials['material_animations'] = animations
+        
+        # 更新草稿总时长
+        if start_time > current_duration:
+            draft_data['duration'] = start_time
+        
+        # 保存更新后的项目文件
+        with open(draft_file, 'w', encoding='utf-8') as f:
+            json.dump(draft_data, f, ensure_ascii=False, indent=4)
+        
+        return jsonify({
+            "success": True,
+            "message": f"成功导入{len(segments)}个文案段落"
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == '__main__':
     # 确保输出目录存在
     os.makedirs(os.path.join("static", "output"), exist_ok=True)
-    app.run(debug=True) 
+    import webbrowser
+    webbrowser.open("http://localhost:5000")
+    app.run()
