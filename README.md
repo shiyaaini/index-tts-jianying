@@ -28,6 +28,7 @@
 ## 📋 项目简介
 
 在此感谢哔哩哔哩：
+
 <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px; margin: 10px 0; background-color: #f8f9fa;">
   <a href="https://github.com/index-tts/index-tts" target="_blank" style="text-decoration: none; color: #0969da; font-weight: bold;">
     index-tts
@@ -35,7 +36,8 @@
   <p style="margin: 8px 0 0; color: #666;">IndexTTS 是一种主要基于 XTTS 和 Tortoise 的 GPT 风格的文本转语音 （TTS） 模型。它能够使用拼音纠正汉字的发音，并通过标点符号控制任何位置的停顿。我们增强了系统的多个模块，包括扬声器条件特征表示的改进，以及 BigVGAN2 的集成以优化音频质量。</p>
 </div>
 通过网盘分享的文件（项目+模型）：github
-链接: https://pan.baidu.com/s/1DJFfS14bGSC0ZAq9E-rBMg?pwd=6666 提取码: 6666 \n
+链接: https://pan.baidu.com/s/1DJFfS14bGSC0ZAq9E-rBMg?pwd=6666 提取码: 6666 
+
 ## 📂 项目结构
 
 ```
@@ -213,7 +215,11 @@ python app.py
 <img src="./static/images/three.png" alt="剪映替换步骤" style="max-width:80%; height:auto;">
 </div>
 
+效果展示（模型未下载时的界面）：
 
+<div align="center">
+<img src="./static/images/four.png" alt="效果展示" style="max-width:80%; height:auto;">
+</div>
 
 ## 🎵 去除伴奏
 
