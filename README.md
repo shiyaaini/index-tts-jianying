@@ -35,7 +35,7 @@
   <p style="margin: 8px 0 0; color: #666;">IndexTTS 是一种主要基于 XTTS 和 Tortoise 的 GPT 风格的文本转语音 （TTS） 模型。它能够使用拼音纠正汉字的发音，并通过标点符号控制任何位置的停顿。我们增强了系统的多个模块，包括扬声器条件特征表示的改进，以及 BigVGAN2 的集成以优化音频质量。</p>
 </div>
 通过网盘分享的文件（项目+模型）：github
-链接: https://pan.baidu.com/s/1DJFfS14bGSC0ZAq9E-rBMg?pwd=6666 提取码: 6666 
+链接: https://pan.baidu.com/s/1DJFfS14bGSC0ZAq9E-rBMg?pwd=6666 提取码: 6666 \n
 ## 📂 项目结构
 
 ```
