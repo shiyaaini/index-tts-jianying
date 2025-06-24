@@ -82,7 +82,9 @@ index_tts_web/
 | `model/checkpoints/voice` | 参考音频存放位置 |
 | `static/output` | 生成的音频文件默认存放位置 |
 
-> **注意**：本项目使用剪映版本为5.9，大于5.9的版本无法兼容使用
+> **注意**：本项目使用剪映版本为5.9，大于5.9的版本无法兼容使用通过网盘分享的文件：剪映5.9
+> 链接: https://pan.baidu.com/s/1q6s2QVcP6F4MKm_qehJmXw?pwd=6666 提取码: 6666 
+> --来自百度网盘超级会员v3的分享
 
 ## ✨ 功能特性
 
@@ -142,9 +144,23 @@ pip install openai
 
 <img src="./static/images/two.png" alt="安装依赖" style="max-width:100%; height:auto;">
 
-```bash
-pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+报下面错误
+
 ```
+(index-tts) F:\BaiduNetdiskDownload\index_tts_web>python app.py
+Traceback (most recent call last):
+  File "F:\BaiduNetdiskDownload\index_tts_web\app.py", line 11, in <module>
+    from indextts.infer import IndexTTS
+ModuleNotFoundError: No module named 'indextts'
+```
+
+请到[index-tts/index-tts: An Industrial-Level Controllable and Efficient Zero-Shot Text-To-Speech System (github.com)](https://github.com/index-tts/index-tts)把项目拉取下来，解压完成后终端运行
+
+```
+pip install -e .
+```
+
+
 
 ## ❓ 常见问题
 
@@ -223,6 +239,7 @@ python app.py
 
 - QQ交流群：700598581
 - 哔哩哔哩：[浅若红尘的个人空间](https://space.bilibili.com/519965290)
+- 公众号：浅若红尘
 
 ## ❤️ 赞赏支持
 
