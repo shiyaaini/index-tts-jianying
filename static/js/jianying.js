@@ -319,7 +319,9 @@ $(document).ready(function() {
             project_name: selectedProject,
             audio_data: JSON.stringify(audioItems),
             model: $('#jianyingModelSelect').val(),
-            voice: selectedVoice
+            voice: selectedVoice,
+            sync_position: $('#syncPositionCheck').is(':checked'),
+            append_to_last: $('#appendToLastCheck').is(':checked')
         };
         
         console.log('提交请求数据:', requestData);

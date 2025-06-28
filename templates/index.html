@@ -309,6 +309,18 @@
 
                                 <div class="mb-3" id="projectAudioList" style="display:none;">
                                     <label class="form-label">项目中的音频列表</label>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="syncPositionCheck" name="sync_position" checked>
+                                        <label class="form-check-label" for="syncPositionCheck">
+                                            保持字幕位置不变，调整音频位置与字幕一致
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="appendToLastCheck" name="append_to_last">
+                                        <label class="form-check-label" for="appendToLastCheck">
+                                            从第一个字幕位置开始连续排列（自动排序）
+                                        </label>
+                                    </div>
                                     <div class="table-responsive-sm mobile-table-container">
                                         <table class="table table-hover table-bordered" id="audioListTable">
                                             <thead class="table-light">

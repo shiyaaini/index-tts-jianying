@@ -454,13 +454,15 @@ def load_jianying_audio_info(project_dir, project_name):
         return False, f"解析项目文件失败: {str(e)}"
 
 # 替换剪映项目中的音频
-def replace_jianying_audio(project_dir, project_name, audio_replacements):
+def replace_jianying_audio(project_dir, project_name, audio_replacements, sync_position=False, append_to_last=False):
     """
     替换剪映项目中的多个音频
     
     :param project_dir: 剪映项目目录
     :param project_name: 项目名称
     :param audio_replacements: 音频替换数据列表，每项包含 audio_id、new_audio_path、duration
+    :param sync_position: 是否同步字幕和音频的开始位置
+    :param append_to_last: 是否紧跟在上一段字幕和音频后面
     :return: (成功标志, 消息)
     """
     project_path = os.path.join(project_dir, project_name)
@@ -601,6 +603,107 @@ def replace_jianying_audio(project_dir, project_name, audio_replacements):
                                         segment["target_timerange"]["duration"] = info['duration']
                                     print(f"更新轨道音频时长 (通过关联): {segment_id}, 关联文本: {text_id}, 新时长: {info['duration']}")
         
+        # 第3步：更新字幕轨道的显示时长和位置（如果启用了相关选项）
+        
+        # 如果选择了连续排列，先找出要处理的音频段落的信息
+        first_segment_start = None
+        audio_segments_to_process = []
+        
+        if append_to_last:
+            # 收集所有需要处理的音频段落，按ID顺序匹配
+            for audio_id, info in replacement_map.items():
+                # 查找对应的音频段落
+                for track in [t for t in tracks if t.get("type") == "audio"]:
+                    for segment in track.get("segments", []):
+                        if segment.get("material_id") == audio_id:
+                            audio_segments_to_process.append({
+                                'segment': segment,
+                                'audio_id': audio_id,
+                                'text_id': audio_to_text_map.get(audio_id),
+                                'duration': info['duration']
+                            })
+                            # 记录第一个段落的原始开始位置
+                            if first_segment_start is None and "target_timerange" in segment:
+                                first_segment_start = segment["target_timerange"].get("start", 0)
+                            break
+            
+            # 按原始开始位置排序
+            if audio_segments_to_process:
+                audio_segments_to_process.sort(key=lambda x: x['segment'].get("target_timerange", {}).get("start", 0))
+                # 以第一个段落的开始位置作为基准
+                first_segment_start = audio_segments_to_process[0]['segment'].get("target_timerange", {}).get("start", 0)
+                print(f"找到第一个段落的开始位置: {first_segment_start}")
+        
+        # 处理每个轨道中的字幕段落
+        for track in tracks:
+            if track.get("type") == "text":
+                for segment in track.get("segments", []):
+                    material_id = segment.get("material_id")
+                    segment_timerange = segment.get("target_timerange", {})
+                    
+                    # 查找是否有与此字幕关联的音频被替换
+                    for audio_id, info in replacement_map.items():
+                        text_id = audio_to_text_map.get(audio_id)
+                        # 如果字幕的material_id与音频关联的文本ID匹配
+                        if material_id == text_id:
+                            # 找到对应的音频轨道段落，获取其开始位置
+                            audio_segment_start = None
+                            audio_segment = None
+                            
+                            # 查找对应的音频段落
+                            for audio_track in [t for t in tracks if t.get("type") == "audio"]:
+                                for a_segment in audio_track.get("segments", []):
+                                    if a_segment.get("material_id") == audio_id:
+                                        audio_segment = a_segment
+                                        audio_segment_start = a_segment.get("target_timerange", {}).get("start", None)
+                                        break
+                                if audio_segment is not None:
+                                    break
+                            
+                            # 更新字幕的显示时长与音频时长一致
+                            if "target_timerange" in segment:
+                                segment["target_timerange"]["duration"] = info['duration']
+                                print(f"更新字幕显示时长: 字幕ID {material_id}, 关联音频 {audio_id}, 新时长: {info['duration']}")
+                            
+                            # 不在这里处理连续排列的情况，因为我们已经收集了所有需要处理的音频段落
+                            
+                            # 如果启用了同步选项，保持字幕位置不变，调整音频位置
+                            if sync_position and audio_segment is not None and not append_to_last:
+                                # 获取字幕的开始位置
+                                subtitle_start = segment.get("target_timerange", {}).get("start", None)
+                                if subtitle_start is not None:
+                                    # 将音频的开始位置调整为与字幕一致
+                                    audio_segment["target_timerange"]["start"] = subtitle_start
+                                    print(f"调整音频位置与字幕一致: 字幕ID {material_id}, 音频ID {audio_id}, 位置: {subtitle_start}")
+        
+        # 处理连续排列的情况
+        if append_to_last and audio_segments_to_process and first_segment_start is not None:
+            print("执行连续排列...")
+            current_position = first_segment_start
+            
+            # 按顺序处理所有音频段落
+            for i, item in enumerate(audio_segments_to_process):
+                audio_id = item['audio_id']
+                text_id = item['text_id']
+                duration = item['duration']
+                audio_segment = item['segment']
+                
+                # 更新音频段落的位置
+                if "target_timerange" in audio_segment:
+                    audio_segment["target_timerange"]["start"] = current_position
+                    print(f"调整音频位置: 音频ID {audio_id}, 新位置: {current_position}")
+                
+                # 更新对应的字幕段落的位置
+                for track in [t for t in tracks if t.get("type") == "text"]:
+                    for text_segment in track.get("segments", []):
+                        if text_segment.get("material_id") == text_id and "target_timerange" in text_segment:
+                            text_segment["target_timerange"]["start"] = current_position
+                            print(f"调整字幕位置: 字幕ID {text_id}, 新位置: {current_position}")
+                            break
+                
+                # 更新下一个位置
+                current_position += duration
+        
         # 保存更新后的项目文件
         with open(draft_content_path, "w", encoding="utf-8") as f:
             json.dump(draft_content, f, ensure_ascii=False)
@@ -650,6 +753,8 @@ def replace_jianying_audio_route():
         audio_data = request.form.get('audio_data')  # 包含音频ID和文本的JSON数据
         model_dir = request.form.get('model')
         voice_path = request.form.get('voice')
+        sync_position = request.form.get('sync_position', 'false').lower() == 'true'
+        append_to_last = request.form.get('append_to_last', 'false').lower() == 'true'
         
         if not all([project_dir, project_name, audio_data, model_dir, voice_path]):
             return jsonify({"error": "缺少必要参数"}), 400
@@ -728,7 +833,7 @@ def replace_jianying_audio_route():
         
         # 替换剪映项目中的音频
         if audio_replacements:
-            success, message = replace_jianying_audio(project_dir, project_name, audio_replacements)
+            success, message = replace_jianying_audio(project_dir, project_name, audio_replacements, sync_position, append_to_last)
             if not success:
                 return jsonify({"error": message}), 500
         
@@ -1458,10 +1563,50 @@ def import_script_to_jianying():
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+def check_jianying_path():
+    # 获取当前用户的AppData目录
+    if os.path.exists("config.json"):
+        with open("config.json", "r", encoding="utf-8") as f:
+            config = json.load(f)
+        if config["jianying_project_dir"]=="":
+            print("正在自动获取剪映路径")
+
+        else:
+            print(f"config.json jianying_project_dir已有值，跳过处理,{config['jianying_project_dir']}")
+            return ""
+    else:
+        print("config.json不存在，正在创建")
+        config = {
+            "jianying_project_dir": ""
+        }
+        with open("config.json", "w", encoding="utf-8") as f:
+            json.dump(config, f, ensure_ascii=False, indent=4)
+    try:
+        appdata_path = os.getenv('LOCALAPPDATA')
+        if not appdata_path:
+            return False
+
+        # 构造剪映项目路径
+        jianying_path = os.path.join(
+            appdata_path,
+            'JianyingPro',
+            'User Data',
+            'Projects',
+            'com.lveditor.draft'
+        )
+
+        # 检查路径是否存在
+        config["jianying_project_dir"]=jianying_path
+        with open("config.json", "w", encoding="utf-8") as f:
+            json.dump(config, f, ensure_ascii=False, indent=4)
+        return os.path.exists(jianying_path)
+    except:
+        print("Windown没有该目录,若是其他系统,请自行在填写网页中填写")
 
 if __name__ == '__main__':
     # 确保输出目录存在
     os.makedirs(os.path.join("static", "output"), exist_ok=True)
     import webbrowser
     webbrowser.open("http://localhost:5000")
+    check_jianying_path()
     app.run()

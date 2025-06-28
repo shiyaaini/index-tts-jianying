@@ -13,19 +13,18 @@
 
 ## 📑 目录
 
-- [项目简介](#项目简介)
-- [项目结构](#项目结构)
-- [功能特性](#功能特性)
-- [系统依赖](#系统依赖)
-- [安装指南](#安装指南)
-- [常见问题](#常见问题)
-- [运行方法](#运行方法)
-- [剪映替换教程](#剪映替换教程)
-- [去除伴奏](#去除伴奏)
-- [交流方式](#交流方式)
-- [赞赏支持](#赞赏支持)
+- [项目简介](#project-intro)
+- [项目结构](#project-structure)
+- [功能特性](#features)
+- [系统依赖](#system-requirements)
+- [常见问题](#faq)
+- [运行方法](#how-to-run)
+- [剪映替换教程](#jianying-tutorial)
+- [去除伴奏](#remove-bgm)
+- [交流方式](#communication)
+- [赞赏支持](#support)
 
-## 📋 项目简介
+## 📋 项目简介 {#project-intro}
 
 在此感谢哔哩哔哩：
 
@@ -38,7 +37,7 @@
 通过网盘分享的文件（项目+模型）：github
 链接: https://pan.baidu.com/s/1DJFfS14bGSC0ZAq9E-rBMg?pwd=6666 提取码: 6666 
 
-## 📂 项目结构
+## 📂 项目结构 {#project-structure}
 
 ```
 index_tts_web/
@@ -88,7 +87,7 @@ index_tts_web/
 > 链接: https://pan.baidu.com/s/1q6s2QVcP6F4MKm_qehJmXw?pwd=6666 提取码: 6666 
 > --来自百度网盘超级会员v3的分享
 
-## ✨ 功能特性
+## ✨ 功能特性 {#features}
 
 - ✅ 选择不同的语音合成模型
 - ✅ 选择参考音频作为语音风格参考
@@ -100,7 +99,7 @@ index_tts_web/
   - 🎭 剪映的音色选择不符合个人需求
 - ✅ 剪映的文字样式选择（可以下载好看的ttf文件。好看的字体都收费😂）
 
-## 🔧 系统依赖
+## 🔧 系统依赖 {#system-requirements}
 
 ### 基础环境安装
 
@@ -164,7 +163,7 @@ pip install -e .
 
 
 
-## ❓ 常见问题
+## ❓ 常见问题 {#faq}
 
 ### 1️⃣ CUDA安装缓慢
 
@@ -194,7 +193,7 @@ pip install deepspeed
 
 > 注意：系统CUDA版本与PyTorch编译时的CUDA版本需匹配，可通过`nvidia-smi`查看系统CUDA版本
 
-## 🚀 运行方法
+## 🚀 运行方法 {#how-to-run}
 
 1. 确保已安装所有依赖
 2. 检查模型文件是否已放置在 `model/checkpoints` 目录
@@ -207,7 +206,28 @@ python app.py
 
 5. 在浏览器中访问: `http://127.0.0.1:5000`
 
-## 🎬 剪映替换教程
+### 快速启动脚本
+
+为了便于快速启动应用，您可以创建以下bat脚本（`start_tts.bat`）：
+
+```bat
+@echo off
+echo 正在启动文本转语音系统...
+echo.
+
+REM 激活conda环境
+call conda activate index-tts
+
+REM 启动应用
+python app.py
+
+REM 如果应用意外关闭，暂停显示
+pause
+```
+
+将此脚本保存在项目根目录下，双击即可快速启动应用。
+
+## 🎬 剪映替换教程 {#jianying-tutorial}
 
 步骤：草稿中先使用任意内置声音朗诵（这样生成的音频位置会固定，便于替换）
 
@@ -217,7 +237,7 @@ python app.py
 
 
 
-## 🎵 去除伴奏
+## 🎵 去除伴奏 {#remove-bgm}
 
 推荐使用UVR5软件：[The Ultimate Vocal Remover Application](https://ultimatevocalremover.com/)
 
@@ -233,13 +253,13 @@ python app.py
 - [UVR5使用教程(CSDN)](https://blog.csdn.net/2301_79607161/article/details/135057915)
 - [UVR5使用教程和最新连招(B站)](https://www.bilibili.com/opus/860174897353064448)
 
-## 💬 交流方式
+## 💬 交流方式 {#communication}
 
 - QQ交流群：700598581
 - 哔哩哔哩：[浅若红尘的个人空间](https://space.bilibili.com/519965290)
 - 公众号：浅若红尘
 
-## ❤️ 赞赏支持
+## ❤️ 赞赏支持 {#support}
 
 如果这个项目帮助了你，欢迎：
 - ⭐ 给项目点个Star
