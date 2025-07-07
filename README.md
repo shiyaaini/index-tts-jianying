@@ -36,6 +36,10 @@
 </div>
 通过网盘分享的文件（项目+模型）：github
 链接: https://pan.baidu.com/s/1DJFfS14bGSC0ZAq9E-rBMg?pwd=6666 提取码: 6666 
+整合包（没有电脑知识的朋友准备的）：
+通过网盘分享的文件：整合包
+链接: https://pan.baidu.com/s/11mEIKEfWxmEW0r7nxbag0g?pwd=6666 提取码: 6666 
+--来自百度网盘超级会员v3的分享
 
 ## 📂 项目结构 {#project-structure}
 
