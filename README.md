@@ -34,94 +34,20 @@
   </a>
   <p style="margin: 8px 0 0; color: #666;">IndexTTS 是一种主要基于 XTTS 和 Tortoise 的 GPT 风格的文本转语音 （TTS） 模型。它能够使用拼音纠正汉字的发音，并通过标点符号控制任何位置的停顿。我们增强了系统的多个模块，包括扬声器条件特征表示的改进，以及 BigVGAN2 的集成以优化音频质量。</p>
 </div>
-通过网盘分享的文件（项目+模型）：github
-链接: https://pan.baidu.com/s/1DJFfS14bGSC0ZAq9E-rBMg?pwd=6666 提取码: 6666 
-整合包（没有电脑知识的朋友准备的）：
-通过网盘分享的文件：整合包
-链接: https://pan.baidu.com/s/11mEIKEfWxmEW0r7nxbag0g?pwd=6666 提取码: 6666 
---来自百度网盘超级会员v3的分享
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>百度网盘资源分享</title>
-    <style>
-        body {
-            font-family: 'Microsoft YaHei', sans-serif;
-            background-color: #f5f5f5;
-            margin: 0;
-            padding: 20px;
-            color: #333;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        h1 {
-            text-align: center;
-            color: #1e88e5;
-        }
-        .resource-card {
-            background: #f9f9f9;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-            border: 1px solid #eee;
-        }
-        .resource-title {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        .baidu-link {
-            display: inline-block;
-            background: #1e88e5;
-            color: white;
-            padding: 8px 15px;
-            border-radius: 4px;
-            text-decoration: none;
-            font-weight: bold;
-            transition: background 0.3s;
-        }
-        .baidu-link:hover {
-            background: #1976d2;
-        }
-        .extract-code {
-            margin-top: 8px;
-            font-size: 14px;
-            color: #666;
-        }
-        .extract-code span {
-            font-weight: bold;
-            color: #333;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>资源分享</h1>
-        
-        <div class="resource-card">
-            <div class="resource-title">项目+模型</div>
-            <a href="https://pan.baidu.com/..." class="baidu-link" target="_blank">https://pan.baidu.com/s/1DJFfS14bGSC0ZAq9E-rBMg?pwd=6666</a>
-            <div class="extract-code">提取码：<span>6666</span></div>
-        </div>
-        
-        <div class="resource-card">
-            <div class="resource-title">整合包（适合新手使用，解压直接点击启动.bat即可）</div>
-            <a href="https://pan.baidu.com/..." class="baidu-link" target="_blank">https://pan.baidu.com/s/11mEIKEfWxmEW0r7nxbag0g?pwd=6666</a>
-            <div class="extract-code">提取码：<span>6666</span></div>
-        </div>
-        
-        <!-- 更多资源项 -->
-    </div>
-</body>
-</html>
+# 资源分享
+
+## 项目+模型
+- **链接**：[https://pan.baidu.com/s/1DJFfS14bGSC0ZAq9E-rBMg](https://pan.baidu.com/s/1DJFfS14bGSC0ZAq9E-rBMg)
+- **提取码**：6666
+
+## 整合包（适合新手使用，解压直接点击启动.bat即可）
+- **链接**：[https://pan.baidu.com/s/11mEIKEfWxmEW0r7nxbag0g](https://pan.baidu.com/s/11mEIKEfWxmEW0r7nxbag0g)
+- **提取码**：6666
+
+## 使用说明
+1. 点击链接进入百度网盘页面
+2. 输入对应的提取码
+3. 选择下载文件到本地
 
 ## 📂 项目结构 {#project-structure}
 
