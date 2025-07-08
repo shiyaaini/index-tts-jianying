@@ -142,6 +142,7 @@ $(document).ready(function() {
     $('#loadProjectBtn').on('click', function() {
         const projectDir = $('#projectPath').val().trim();
         selectedProject = $('#projectSelect').val();
+        let getAllSubtitles = $('#loadAllSubtitlesCheckbox').is(':checked');
         
         if (!projectDir || !selectedProject) {
             $('#jianyingErrorArea').text('请确保已选择项目目录和工程').show();
@@ -154,14 +155,15 @@ $(document).ready(function() {
         $('#jianyingErrorArea').hide();
         $('#jianyingSuccessArea').hide();
         
-        loadProjectAudio(projectDir, selectedProject);
+        loadProjectAudio(projectDir, selectedProject, getAllSubtitles);
     });
     
     // 加载项目音频
-    function loadProjectAudio(projectDir, projectName) {
+    function loadProjectAudio(projectDir, projectName,get_all_subtitles = false) {
         $.post('/load_jianying_audio', {
             project_dir: projectDir,
-            project_name: projectName
+            project_name: projectName,
+            get_all_subtitles: get_all_subtitles
         }, function(response) {
             $('#jianyingLoadingArea').hide();
             

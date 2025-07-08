@@ -371,8 +371,235 @@ def check_jianying_project_dir(project_dir):
     
     return True, valid_dirs
 
+
+def add_audio_to_subtitles(project_dir, project_name):
+    try:
+        project_path = os.path.join(project_dir, project_name)
+        draft_content_path = os.path.join(project_path, "draft_content.json")
+
+        with open(draft_content_path, "r", encoding="utf-8") as f:
+            draft_content = json.load(f)
+
+        # 备份原始文件
+        backup_path = f"{draft_content_path}.bak"
+        shutil.copy(draft_content_path, backup_path)
+
+        # 获取材料库
+        materials = draft_content.get("materials", {})
+        texts = materials.get("texts", [])
+        audios = materials.get("audios", [])
+        animations = materials.get("material_animations", [])
+
+        # 获取轨道
+        tracks = draft_content.get("tracks", [])
+
+        # 查找文本轨道和音频轨道
+        text_track = None
+        audio_track = None
+        for track in tracks:
+            if track.get("type") == "text":
+                text_track = track
+            elif track.get("type") == "audio":
+                audio_track = track
+
+        # 如果没有文本轨道，创建一个
+        if text_track is None:
+            text_track = {
+                "attribute": 0,
+                "flag": 0,
+                "id": str(uuid.uuid4()).upper(),
+                "is_default_name": True,
+                "name": "",
+                "segments": [],
+                "type": "text"
+            }
+            tracks.append(text_track)
+
+        # 如果没有音频轨道，创建一个
+        if audio_track is None:
+            audio_track = {
+                "attribute": 0,
+                "flag": 0,
+                "id": str(uuid.uuid4()).upper(),
+                "is_default_name": True,
+                "name": "",
+                "segments": [],
+                "type": "audio"
+            }
+            tracks.append(audio_track)
+
+        # 用于记录添加的音频数量
+        added_audio_count = 0
+
+        # 创建文本ID到文本对象的映射
+        text_id_map = {text["id"]: text for text in texts}
+
+        # 创建音频ID到音频对象的映射
+        audio_id_map = {audio["id"]: audio for audio in audios}
+
+        # 创建文本ID到已关联音频的映射
+        text_has_audio = {}
+        for audio in audios:
+            text_id = audio.get("text_id")
+            if text_id:
+                text_has_audio[text_id] = True
+
+        # 遍历所有字幕
+        for text in texts:
+            text_id = text.get("id")
+
+            # 如果该字幕已经有关联的音频，跳过
+            if text_has_audio.get(text_id):
+                continue
+
+            # 为这个字幕创建一个新的音频ID
+            audio_id = str(uuid.uuid4()).upper()
+
+            # 尝试获取字幕内容
+            text_content = ""
+            try:
+                content_json = text.get("content", "{}")
+                content_data = json.loads(content_json)
+                text_content = content_data.get("text", "")
+            except:
+                text_content = content_json
+
+            # 创建音频材料
+            audio_path_dir = os.path.join(project_path, 'textReading')
+            audio_path = f"{audio_path_dir}/{audio_id.lower()}.wav"
+
+            # 默认时长（微秒），先设置为0
+            duration = 0
+
+            audio_item = {
+                "app_id": 0,
+                "check_flag": 1,
+                "duration": duration,
+                "id": audio_id,
+                "name": text_content[:20] + ("..." if len(text_content) > 20 else ""),
+                "path": audio_path,
+                "text_id": text_id,  # 关键：通过text_id关联
+                "type": "text_to_audio"
+            }
+            audios.append(audio_item)
+            audio_id_map[audio_id] = audio_item
+            text_has_audio[text_id] = True
+
+            # 创建动画ID（占位）
+            animation_id = str(uuid.uuid4()).upper()
+            animation_item = {
+                "animations": [],
+                "id": animation_id,
+                "multi_language_current": "none",
+                "type": "sticker_animation"
+            }
+            animations.append(animation_item)
+
+            # 获取该字幕在文本轨道中的segment
+            text_segment = None
+            for segment in text_track.get("segments", []):
+                if segment.get("material_id") == text_id:
+                    text_segment = segment
+                    break
+
+            # 如果没有找到文本片段，创建一个新的
+            if text_segment is None:
+                # 创建新的文本轨道片段
+                text_segment = {
+                    "caption_info": None,
+                    "cartoon": False,
+                    "clip": {
+                        "alpha": 1.0,
+                        "flip": {"horizontal": False, "vertical": False},
+                        "rotation": 0.0,
+                        "scale": {"x": 1.0, "y": 1.0},
+                        "transform": {"x": 0.0, "y": -0.7721662468513853}
+                    },
+                    "common_keyframes": [],
+                    "enable_adjust": False,
+                    "extra_material_refs": [animation_id],
+                    "group_id": "",
+                    "id": str(uuid.uuid4()).upper(),
+                    "material_id": text_id,
+                    "render_index": 14000 + len(text_track["segments"]),
+                    "target_timerange": {
+                        "duration": 3000000,  # 默认3秒
+                        "start": 0
+                    },
+                    "track_attribute": 0,
+                    "track_render_index": 1,
+                    "uniform_scale": {"on": True, "value": 1.0},
+                    "visible": True,
+                    "volume": 1.0
+                }
+                text_track["segments"].append(text_segment)
+
+            # 获取字幕的开始时间和时长
+            start_time = text_segment.get("target_timerange", {}).get("start", 0)
+            duration = text_segment.get("target_timerange", {}).get("duration", 3000000)
+
+            # 创建音频轨道segment
+            audio_segment = {
+                "caption_info": None,
+                "cartoon": False,
+                "clip": None,
+                "common_keyframes": [],
+                "enable_adjust": False,
+                "group_id": "",
+                "id": str(uuid.uuid4()).upper(),
+                "material_id": audio_id,
+                "render_index": 0,
+                "source_timerange": {
+                    "duration": duration,
+                    "start": 0
+                },
+                "target_timerange": {
+                    "duration": duration,
+                    "start": start_time
+                },
+                "track_attribute": 0,
+                "track_render_index": 0,
+                "visible": True,
+                "volume": 1
+            }
+            audio_track["segments"].append(audio_segment)
+
+            # 更新文本轨道的segment，添加extra_material_refs（动画）
+            if "extra_material_refs" in text_segment:
+                text_segment["extra_material_refs"].append(animation_id)
+            else:
+                text_segment["extra_material_refs"] = [animation_id]
+
+            added_audio_count += 1
+
+        # 更新材料库和轨道
+        materials['audios'] = audios
+        materials['material_animations'] = animations
+        draft_content['materials'] = materials
+        draft_content['tracks'] = tracks
+
+        # 保存更新后的项目文件
+        with open(draft_content_path, "w", encoding="utf-8") as f:
+            json.dump(draft_content, f, ensure_ascii=False, indent=4)
+
+        return True, f"成功为{added_audio_count}个字幕添加了音频信息"
+    except Exception as e:
+        return False, f"添加音频失败: {str(e)}"
+
+
+# 在load_jianying_audio_info中调用
+def load_jianying_audio_info(project_dir, project_name, get_all_subtitles=False):
+    if get_all_subtitles:
+        # 调用修复后的函数
+        success, result = add_audio_to_subtitles(project_dir, project_name)
+        if not success:
+            return False, result
+
+    # 其余代码保持不变...
 # 加载剪映项目中的音频信息
-def load_jianying_audio_info(project_dir, project_name):
+def load_jianying_audio_info(project_dir, project_name, get_all_subtitles=False):
+    if get_all_subtitles:
+        add_audio_to_subtitles(project_dir, project_name)
     project_path = os.path.join(project_dir, project_name)
     draft_content_path = os.path.join(project_path, "draft_content.json")
     
@@ -732,11 +959,12 @@ def check_jianying_project():
 def load_jianying_audio():
     project_dir = request.form.get('project_dir')
     project_name = request.form.get('project_name')
+    get_all_subtitles = request.form.get('get_all_subtitles', 'false').lower() == 'true'
     
     if not project_dir or not project_name:
         return jsonify({"error": "缺少必要参数"}), 400
     
-    success, result = load_jianying_audio_info(project_dir, project_name)
+    success, result = load_jianying_audio_info(project_dir, project_name, get_all_subtitles)
     if success:
         return jsonify({
             "success": True,
