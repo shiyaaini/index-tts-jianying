@@ -22,19 +22,20 @@ $(document).ready(function() {
         const modelPath = $(this).val();
         
         // 显示加载状态
-        $('#jianyingVoiceTable tbody').html('<tr><td colspan="5" class="text-center">加载中...</td></tr>');
+        $('#jianyingVoiceTable tbody').html('<tr><td colspan="6" class="text-center">加载中...</td></tr>');
         
         // 请求该模型的参考音频列表
-        $.get('/get_voices', { model_path: modelPath }, function(voices) {
+        $.get('/get_voices', { model_path: modelPath }, function(response) {
             let voicesHtml = '';
+            const voices = response.voices || [];
             
             if (voices.length === 0) {
-                voicesHtml = '<tr><td colspan="5" class="text-center">没有可用的参考音频</td></tr>';
+                voicesHtml = '<tr><td colspan="6" class="text-center">没有可用的参考音频</td></tr>';
                 $('#jianyingSelectedVoice').val(''); // 清空选择
             } else {
                 voices.forEach((voice, index) => {
                     voicesHtml += `
-                        <tr data-voice-path="${voice.path}" data-voice-name="${voice.name}">
+                        <tr data-voice-path="${voice.path}" data-voice-name="${voice.name}" data-category="${voice.category}" class="voice-row">
                             <td><input type="radio" name="jianyingVoiceRadio" class="form-check-input" ${index === 0 ? 'checked' : ''}></td>
                             <td>${voice.name}</td>
                             <td>
@@ -42,6 +43,13 @@ $(document).ready(function() {
                             </td>
                             <td>
                                 <input type="text" class="form-control voice-note-input" value="${voice.note}" placeholder="添加备注">
+                            </td>
+                            <td>
+                                <select class="form-select form-select-sm voice-category-select">
+                                    ${response.categories ? response.categories.map(cat => 
+                                        `<option value="${cat.id}" ${voice.category === cat.id ? 'selected' : ''}>${cat.name}</option>`
+                                    ).join('') : ''}
+                                </select>
                             </td>
                             <td>
                                 <button type="button" class="btn btn-sm btn-outline-primary save-note-btn">保存备注</button>
@@ -90,6 +98,32 @@ $(document).ready(function() {
                     alert('备注已保存');
                 }
             });
+        });
+        
+        // 分类筛选功能 - 剪映面板专用
+        $('#jianyingPanel .category-badge').off('click').on('click', function() {
+            // 移除所有分类的active状态
+            $('#jianyingPanel .category-badge').removeClass('active');
+            
+            // 添加当前分类的active状态
+            $(this).addClass('active');
+            
+            // 获取选择的分类
+            const selectedCategory = $(this).data('category');
+            
+            // 筛选表格行
+            if (selectedCategory === 'all') {
+                $('#jianyingVoiceTable .voice-row').removeClass('filtered').show();
+            } else {
+                $('#jianyingVoiceTable .voice-row').each(function() {
+                    const rowCategory = $(this).data('category');
+                    if (rowCategory === selectedCategory) {
+                        $(this).removeClass('filtered').show();
+                    } else {
+                        $(this).addClass('filtered').hide();
+                    }
+                });
+            }
         });
     }
     

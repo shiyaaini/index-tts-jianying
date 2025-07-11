@@ -1,0 +1,11 @@
+10系显卡无法使用float16推理
+删除依赖
+.\python10\python.exe -m pip uninstall indextts
+安装依赖
+.\python10\python.exe -m pip install index-tts-main.zip -i https://pypi.org/simple
+
+若是显卡比较旧的无法支持12.X的版本，需要自行安装对应的CUDA版本
+查看对应网站：
+https://pytorch.org/get-started/locally/
+在当前目录终端输入：
+.\python10\python.exe -m pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118

@@ -6,6 +6,7 @@ import time
 import shutil
 from flask import Flask, render_template, request, jsonify, send_file, send_from_directory
 from werkzeug.utils import secure_filename
+from werkzeug.datastructures import FileStorage
 import glob
 
 from indextts.infer import IndexTTS
@@ -21,8 +22,452 @@ HISTORY_FILE = "records/generation_history.json"
 # 添加字体目录配置
 FONT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'font')
 
+# 添加新的语音目录配置
+VOICE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'voice')
+VOICE_CATEGORIES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'voice_categories.json')
+
+# 临时目录配置
+TEMP_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'temp')
+
 # 确保记录目录存在
 os.makedirs(os.path.dirname(HISTORY_FILE), exist_ok=True)
+# 确保语音目录存在
+os.makedirs(VOICE_DIR, exist_ok=True)
+# 确保临时目录存在
+os.makedirs(TEMP_DIR, exist_ok=True)
+
+# 加载语音分类数据
+def load_voice_categories():
+    # 获取所有子目录作为分类
+    subdirs = [d for d in os.listdir(VOICE_DIR) 
+               if os.path.isdir(os.path.join(VOICE_DIR, d)) and d not in ['.', '..']]
+    
+    # 创建基础分类列表
+    categories = {
+        "categories": []
+    }
+    
+    # 添加默认基础分类
+    default_categories = []
+    
+    # 确保基础分类存在
+    for category in default_categories:
+        if category["id"] not in subdirs:
+            subdirs.append(category["id"])
+        categories["categories"].append(category)
+    
+    # 添加其他发现的目录作为分类
+    for dir_name in subdirs:
+        # 检查是否已经在基础分类中
+        if not any(cat["id"] == dir_name for cat in categories["categories"]):
+            # 添加新分类
+            categories["categories"].append({
+                "id": dir_name,
+                "name": dir_name.capitalize(),  # 首字母大写作为默认名称
+                "description": f"{dir_name.capitalize()}分类"
+            })
+            app.logger.info(f"自动添加新分类: {dir_name}")
+    
+    # 确保所有分类都有对应的目录
+    for category in categories["categories"]:
+        cat_dir = os.path.join(VOICE_DIR, category["id"])
+        if not os.path.exists(cat_dir):
+            os.makedirs(cat_dir)
+            app.logger.info(f"为分类 {category['id']} 创建目录")
+    
+    # 保存分类信息到文件
+    save_voice_categories(categories)
+    
+    return categories
+
+# 保存语音分类数据
+def save_voice_categories(categories):
+    with open(VOICE_CATEGORIES_FILE, "w", encoding="utf-8") as f:
+        json.dump(categories, f, ensure_ascii=False, indent=2)
+
+# 更新语音分类 - 移动音频文件到对应分类目录
+def update_voice_category(voice_name, category_id):
+    # 查找音频文件
+    file_path = None
+    current_category = None
+    
+    for root, dirs, files in os.walk(VOICE_DIR):
+        if voice_name in files:
+            file_path = os.path.join(root, voice_name)
+            # 获取当前分类（相对路径）
+            current_category = os.path.relpath(root, VOICE_DIR)
+            if current_category == '.':
+                current_category = 'other'
+            break
+    
+    if not file_path:
+        return False
+    
+    # 如果已经在正确的分类中，不需要移动
+    if current_category == category_id:
+        return True
+    
+    # 目标目录
+    target_dir = os.path.join(VOICE_DIR, category_id)
+    if not os.path.exists(target_dir):
+        os.makedirs(target_dir)
+    
+    # 目标文件路径
+    target_path = os.path.join(target_dir, voice_name)
+    
+    # 如果目标文件已存在，添加时间戳避免冲突
+    if os.path.exists(target_path) and file_path != target_path:
+        name, ext = os.path.splitext(voice_name)
+        timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        new_name = f"{name}_{timestamp}{ext}"
+        target_path = os.path.join(target_dir, new_name)
+        
+        # 更新voice_name为新名称
+        voice_name = new_name
+    
+    # 移动文件
+    try:
+        shutil.move(file_path, target_path)
+        app.logger.info(f"已将音频 {voice_name} 从 {current_category} 移动到 {category_id}")
+        
+        # 更新data.json
+        voice_data, data_file = load_voice_data()
+        
+        # 更新或添加音频信息
+        voice_url = f"voice/{category_id}/{voice_name}"
+        if voice_name in voice_data:
+            voice_data[voice_name]["path"] = voice_url
+            voice_data[voice_name]["category"] = category_id
+        else:
+            voice_data[voice_name] = {
+                "note": "",
+                "path": voice_url,
+                "category": category_id
+            }
+        
+        # 保存更新
+        with open(data_file, "w", encoding="utf-8") as f:
+            json.dump(voice_data, f, ensure_ascii=False, indent=2)
+        
+        return True
+    except Exception as e:
+        app.logger.error(f"移动音频文件失败: {str(e)}")
+        return False
+
+# 添加新的语音分类
+def add_voice_category(category_id, category_name, description=""):
+    categories = load_voice_categories()
+    
+    # 检查是否已存在
+    for category in categories["categories"]:
+        if category["id"] == category_id:
+            return False, "分类ID已存在"
+    
+    # 添加新分类
+    categories["categories"].append({
+        "id": category_id,
+        "name": category_name,
+        "description": description
+    })
+    
+    # 创建目录
+    category_path = os.path.join(VOICE_DIR, category_id)
+    os.makedirs(category_path, exist_ok=True)
+    
+    save_voice_categories(categories)
+    
+    return True, "分类添加成功"
+
+# 删除语音分类
+def delete_voice_category(category_id):
+    categories = load_voice_categories()
+    
+    # 查找并移除分类
+    categories["categories"] = [cat for cat in categories["categories"] if cat["id"] != category_id]
+    
+    # 保存更新
+    save_voice_categories(categories)
+    
+    # 移动文件到other目录
+    source_dir = os.path.join(VOICE_DIR, category_id)
+    target_dir = os.path.join(VOICE_DIR, "other")
+    
+    # 如果是删除"other"分类，创建一个新的"other"目录
+    if category_id == "other":
+        # 确保other目录存在
+        os.makedirs(target_dir, exist_ok=True)
+        # 添加回"other"分类
+        categories["categories"].append({
+            "id": "other",
+            "name": "其他",
+            "description": "其他未分类语音"
+        })
+        # 保存更新
+        save_voice_categories(categories)
+    
+    if os.path.exists(source_dir):
+        # 移动所有文件到other目录
+        for file in os.listdir(source_dir):
+            if file.endswith((".wav", ".mp3")):
+                source_file = os.path.join(source_dir, file)
+                target_file = os.path.join(target_dir, file)
+                
+                # 如果目标文件已存在，添加时间戳避免冲突
+                if os.path.exists(target_file):
+                    name, ext = os.path.splitext(file)
+                    timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+                    new_file = f"{name}_{timestamp}{ext}"
+                    target_file = os.path.join(target_dir, new_file)
+                
+                # 移动文件
+                shutil.move(source_file, target_file)
+                
+                # 更新data.json
+                voice_data, data_file = load_voice_data()
+                if file in voice_data:
+                    voice_data[file]["path"] = f"voice/other/{os.path.basename(target_file)}"
+                    voice_data[file]["category"] = "other"
+                    
+                    # 如果文件名发生了变化（添加了时间戳）
+                    if os.path.basename(target_file) != file:
+                        voice_data[os.path.basename(target_file)] = voice_data.pop(file)
+                
+                # 保存更新
+                with open(data_file, "w", encoding="utf-8") as f:
+                    json.dump(voice_data, f, ensure_ascii=False, indent=2)
+        
+        # 删除空目录
+        try:
+            os.rmdir(source_dir)
+        except:
+            pass  # 如果目录不空，忽略错误
+    
+    return True, "分类已删除，相关音频已移动到'其他'分类"
+
+# 上传音频文件
+def upload_audio_file(file, category_id):
+    # 验证文件类型
+    if not file.filename.endswith(('.wav', '.mp3')):
+        return False, "只允许上传WAV或MP3格式的音频文件"
+    
+    # 处理文件名，保留中文字符
+    original_filename = file.filename
+    # 替换不安全的字符，但保留中文
+    safe_filename = ""
+    for char in original_filename:
+        if char.isalnum() or char in '._- ' or '\u4e00' <= char <= '\u9fff':  # 保留字母数字和中文字符
+            safe_filename += char
+        else:
+            safe_filename += '_'
+    
+    filename = safe_filename
+    
+    # 如果分类不存在，使用other
+    category_path = os.path.join(VOICE_DIR, category_id)
+    if not os.path.exists(category_path):
+        category_id = "other"
+        category_path = os.path.join(VOICE_DIR, "other")
+    
+    # 保存文件
+    file_path = os.path.join(category_path, filename)
+    file.save(file_path)
+    
+    # 更新data.json
+    voice_data, data_file = load_voice_data()
+    voice_url = f"voice/{category_id}/{filename}"
+    voice_data[filename] = {
+        "note": "",
+        "path": voice_url,
+        "category": category_id
+    }
+    with open(data_file, "w", encoding="utf-8") as f:
+        json.dump(voice_data, f, ensure_ascii=False, indent=2)
+    
+    return True, "音频文件上传成功"
+
+# 批量上传音频文件
+def batch_upload_audio_files(files, category_id):
+    success_count = 0
+    failed_count = 0
+    results = []
+    
+    for file in files:
+        # 跳过空文件
+        if not file.filename:
+            continue
+            
+        # 处理文件名，保留中文字符
+        original_filename = file.filename
+        # 替换不安全的字符，但保留中文
+        safe_filename = ""
+        for char in original_filename:
+            if char.isalnum() or char in '._- ' or '\u4e00' <= char <= '\u9fff':  # 保留字母数字和中文字符
+                safe_filename += char
+            else:
+                safe_filename += '_'
+        
+        file_ext = os.path.splitext(original_filename)[1].lower()
+        
+        # 如果不是支持的格式，尝试转换
+        if file_ext not in ['.wav', '.mp3']:
+            try:
+                # 使用临时文件名避免中文路径问题
+                temp_uuid = str(uuid.uuid4())
+                temp_path = os.path.join(TEMP_DIR, f"{temp_uuid}{file_ext}")
+                file.save(temp_path)
+                
+                # 转换为MP3格式
+                output_filename = os.path.splitext(safe_filename)[0] + ".mp3"
+                output_path = os.path.join(TEMP_DIR, f"{temp_uuid}.mp3")
+                
+                # 使用pydub进行转换
+                try:
+                    from pydub import AudioSegment
+                    audio = AudioSegment.from_file(temp_path)
+                    audio.export(output_path, format="mp3")
+                    
+                    # 替换原始文件对象
+                    with open(output_path, 'rb') as f:
+                        file_content = f.read()
+                    
+                    # 删除临时文件
+                    try:
+                        os.remove(temp_path)
+                        os.remove(output_path)
+                    except Exception as e:
+                        print(f"删除临时文件失败: {str(e)}")
+                    
+                    # 创建新的文件对象
+                    from io import BytesIO
+                    file = FileStorage(
+                        stream=BytesIO(file_content),
+                        filename=output_filename,
+                        content_type='audio/mpeg'
+                    )
+                    
+                except Exception as e:
+                    results.append({
+                        "filename": original_filename,
+                        "success": False,
+                        "message": f"格式转换失败: {str(e)}"
+                    })
+                    failed_count += 1
+                    # 尝试删除临时文件
+                    try:
+                        if os.path.exists(temp_path):
+                            os.remove(temp_path)
+                    except:
+                        pass
+                    continue
+            except Exception as e:
+                results.append({
+                    "filename": original_filename,
+                    "success": False,
+                    "message": f"处理失败: {str(e)}"
+                })
+                failed_count += 1
+                continue
+        
+        # 上传文件
+        success, message = upload_audio_file(file, category_id)
+        
+        if success:
+            success_count += 1
+            results.append({
+                "filename": file.filename,
+                "success": True,
+                "message": message
+            })
+        else:
+            failed_count += 1
+            results.append({
+                "filename": file.filename,
+                "success": False,
+                "message": message
+            })
+    
+    return {
+        "success_count": success_count,
+        "failed_count": failed_count,
+        "results": results
+    }
+
+# 删除音频文件
+def delete_audio_file(filename):
+    # 尝试URL解码文件名，处理可能的编码问题
+    try:
+        from urllib.parse import unquote
+        decoded_filename = unquote(filename)
+        print(f"删除音频: 原始文件名={filename}, 解码后={decoded_filename}")
+    except Exception as e:
+        decoded_filename = filename
+        print(f"解码文件名失败: {str(e)}")
+    
+    # 查找文件 - 首先尝试解码后的文件名
+    file_path = None
+    found_match = False
+    
+    print(f"开始在 {VOICE_DIR} 中查找文件...")
+    
+    for root, dirs, files in os.walk(VOICE_DIR):
+        print(f"搜索目录: {root}, 包含 {len(files)} 个文件")
+        
+        # 尝试不同的文件名变体
+        for file in files:
+            # 尝试原始文件名
+            if file.lower() == filename.lower():
+                file_path = os.path.join(root, file)
+                filename = file  # 使用实际找到的文件名（保留原始大小写）
+                found_match = True
+                print(f"找到匹配(原始文件名): {file_path}")
+                break
+            # 尝试解码后的文件名
+            if file.lower() == decoded_filename.lower():
+                file_path = os.path.join(root, file)
+                filename = file  # 使用实际找到的文件名
+                found_match = True
+                print(f"找到匹配(解码文件名): {file_path}")
+                break
+        
+        if found_match:
+            break
+    
+    if not found_match:
+        print(f"未找到匹配的文件: {filename}")
+        # 列出所有可能的文件
+        all_files = []
+        for root, dirs, files in os.walk(VOICE_DIR):
+            for file in files:
+                all_files.append(os.path.join(root, file))
+        print(f"目录中的所有文件: {all_files[:20]}...")  # 只打印前20个避免日志过长
+        return False, f"找不到指定的音频文件: {filename}"
+    
+    # 删除文件
+    try:
+        os.remove(file_path)
+        print(f"成功删除文件: {file_path}")
+    except Exception as e:
+        print(f"删除文件失败: {str(e)}")
+        return False, f"删除文件失败: {str(e)}"
+    
+    # 更新data.json
+    voice_data, data_file = load_voice_data()
+    if filename in voice_data:
+        del voice_data[filename]
+        with open(data_file, "w", encoding="utf-8") as f:
+            json.dump(voice_data, f, ensure_ascii=False, indent=2)
+        print(f"从data.json中移除了记录: {filename}")
+    else:
+        print(f"警告: {filename} 在data.json中未找到")
+    
+    return True, "音频文件已删除"
+
+# 确保分类目录存在
+def ensure_category_directories():
+    categories = load_voice_categories()
+    for category in categories["categories"]:
+        category_path = os.path.join(VOICE_DIR, category["id"])
+        os.makedirs(category_path, exist_ok=True)
 
 # 加载生成历史记录
 def load_history():
@@ -85,16 +530,14 @@ def load_models():
             models.append({"name": model_name, "path": model_path})
     return models
 
-# 加载特定模型的参考音频列表
-def load_voices(model_path):
-    voices = []
-    voice_dir = os.path.join(model_path, "voice")
-    data_file = os.path.join(voice_dir, "data.json")
+# 加载语音数据信息文件
+def load_voice_data():
+    data_file = os.path.join(VOICE_DIR, "data.json")
     
     # 确保data.json文件存在
     if not os.path.exists(data_file):
         # 如果不存在，创建一个默认的data.json
-        create_default_data_json(voice_dir)
+        create_default_data_json(VOICE_DIR)
     
     # 加载data.json
     with open(data_file, "r", encoding="utf-8") as f:
@@ -104,25 +547,51 @@ def load_voices(model_path):
             # 如果JSON格式有误，创建一个空字典
             voice_data = {}
     
-    # 扫描voice目录下的所有音频文件
-    for file in os.listdir(voice_dir):
-        if file.endswith((".wav", ".mp3")):
-            # 如果在data.json中有记录，使用记录的备注
-            if file in voice_data:
-                note = voice_data[file].get("note", "")
-            else:
-                # 如果没有记录，添加一个空备注
-                note = ""
-                voice_data[file] = {"note": note, "path": os.path.join(voice_dir, file)}
-                # 更新data.json
-                with open(data_file, "w", encoding="utf-8") as f:
-                    json.dump(voice_data, f, ensure_ascii=False, indent=2)
-            
-            voices.append({
-                "name": file,
-                "note": note,
-                "path": os.path.join(voice_dir, file)
-            })
+    return voice_data, data_file
+
+# 加载所有参考音频列表（不按模型区分）
+def load_all_voices():
+    voices = []
+    voice_data, data_file = load_voice_data()
+    
+    # 确保所有分类目录存在
+    ensure_category_directories()
+    
+    # 扫描语音目录及其子目录下的所有音频文件
+    for root, dirs, files in os.walk(VOICE_DIR):
+        for file in files:
+            if file.endswith((".wav", ".mp3")) and file != "data.json":
+                # 获取相对于VOICE_DIR的路径，用作分类ID
+                rel_path = os.path.relpath(root, VOICE_DIR)
+                category_id = rel_path if rel_path != "." else "other"
+                
+                # 完整文件路径
+                full_path = os.path.join(root, file)
+                
+                # 构建音频URL路径 - 使用统一格式 voice/{category}/{filename}
+                audio_url = f"voice/{category_id}/{file}"
+                
+                # 如果在data.json中有记录，使用记录的备注
+                if file in voice_data:
+                    note = voice_data[file].get("note", "")
+                    # 更新存储的路径格式和分类
+                    voice_data[file]["path"] = audio_url
+                    voice_data[file]["category"] = category_id
+                else:
+                    # 如果没有记录，添加一个空备注
+                    note = ""
+                    voice_data[file] = {"note": note, "path": audio_url, "category": category_id}
+                
+                voices.append({
+                    "name": file,
+                    "note": note,
+                    "path": audio_url,
+                    "category": category_id
+                })
+    
+    # 更新data.json
+    with open(data_file, "w", encoding="utf-8") as f:
+        json.dump(voice_data, f, ensure_ascii=False, indent=2)
     
     return voices
 
@@ -136,41 +605,49 @@ def create_default_data_json(voice_dir):
     
     # 扫描voice目录下的所有音频文件，如果有的话
     if os.path.exists(voice_dir):
-        for file in os.listdir(voice_dir):
-            if file.endswith((".wav", ".mp3")):
-                default_data[file] = {
-                    "note": "",
-                    "path": os.path.join(voice_dir, file)
-                }
+        for root, dirs, files in os.walk(voice_dir):
+            for file in files:
+                if file.endswith((".wav", ".mp3")):
+                    rel_path = os.path.relpath(root, voice_dir)
+                    category_id = rel_path if rel_path != "." else "other"
+                    
+                    # 相对于static的路径
+                    full_path = os.path.join(root, file)
+                    rel_static_path = os.path.relpath(full_path, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static'))
+                    
+                    default_data[file] = {
+                        "note": "",
+                        "path": rel_static_path,
+                        "category": category_id
+                    }
     
     # 写入默认data.json
     with open(data_file, "w", encoding="utf-8") as f:
         json.dump(default_data, f, ensure_ascii=False, indent=2)
 
 # 更新参考音频备注
-def update_voice_note(model_path, voice_name, note):
-    voice_dir = os.path.join(model_path, "voice")
-    data_file = os.path.join(voice_dir, "data.json")
-    
-    # 确保data.json文件存在
-    if not os.path.exists(data_file):
-        create_default_data_json(voice_dir)
-    
-    # 加载data.json
-    with open(data_file, "r", encoding="utf-8") as f:
-        try:
-            voice_data = json.load(f)
-        except json.JSONDecodeError:
-            voice_data = {}
+def update_voice_note(voice_name, note):
+    voice_data, data_file = load_voice_data()
     
     # 更新备注
     if voice_name in voice_data:
         voice_data[voice_name]["note"] = note
     else:
-        voice_data[voice_name] = {
-            "note": note,
-            "path": os.path.join(voice_dir, voice_name)
-        }
+        # 查找音频文件的实际路径
+        for root, dirs, files in os.walk(VOICE_DIR):
+            if voice_name in files:
+                full_path = os.path.join(root, voice_name)
+                rel_static_path = os.path.relpath(full_path, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static'))
+                
+                rel_path = os.path.relpath(root, VOICE_DIR)
+                category_id = rel_path if rel_path != "." else "other"
+                
+                voice_data[voice_name] = {
+                    "note": note,
+                    "path": rel_static_path,
+                    "category": category_id
+                }
+                break
     
     # 写入更新后的data.json
     with open(data_file, "w", encoding="utf-8") as f:
@@ -213,8 +690,10 @@ def index():
     models = load_models()
     # 默认选择第一个模型
     default_model = models[0]["path"] if models else ""
-    # 加载默认模型的参考音频
-    voices = load_voices(default_model) if default_model else []
+    # 加载语音文件
+    voices = load_all_voices()
+    # 加载语音分类
+    categories = load_voice_categories()
     # 加载生成历史记录
     history = load_history()
     # 加载配置信息
@@ -224,7 +703,8 @@ def index():
     
     return render_template('index.html', 
                           models=models, 
-                          voices=voices, 
+                          voices=voices,
+                          voice_categories=categories["categories"],
                           selected_model=default_model, 
                           history=history,
                           jianying_project_dir=jianying_project_dir,
@@ -232,12 +712,45 @@ def index():
 
 @app.route('/get_voices', methods=['GET'])
 def get_voices():
-    model_path = request.args.get('model_path')
-    if not model_path:
-        return jsonify({"error": "未指定模型路径"}), 400
+    voices = load_all_voices()
+    categories = load_voice_categories()
+    return jsonify({
+        "voices": voices,
+        "categories": categories["categories"]
+    })
+
+@app.route('/update_voice_category', methods=['POST'])
+def update_voice_category_route():
+    voice_name = request.form.get('voice_name')
+    category_id = request.form.get('category_id')
     
-    voices = load_voices(model_path)
-    return jsonify(voices)
+    if not voice_name or not category_id:
+        return jsonify({"error": "缺少必要参数"}), 400
+    
+    # 更新音频分类
+    success = update_voice_category(voice_name, category_id)
+    
+    # 移动文件到对应分类目录
+    if success:
+        # 查找音频文件
+        for root, dirs, files in os.walk(VOICE_DIR):
+            if voice_name in files:
+                source_path = os.path.join(root, voice_name)
+                dest_path = os.path.join(VOICE_DIR, category_id, voice_name)
+                
+                # 确保目标目录存在
+                os.makedirs(os.path.dirname(dest_path), exist_ok=True)
+                
+                # 如果目标文件已存在，先删除
+                if os.path.exists(dest_path) and source_path != dest_path:
+                    os.remove(dest_path)
+                
+                # 移动文件（如果源文件与目标文件不同）
+                if source_path != dest_path:
+                    shutil.move(source_path, dest_path)
+                break
+    
+    return jsonify({"success": success})
 
 @app.route('/generate', methods=['POST'])
 def generate():
@@ -265,6 +778,14 @@ def generate():
         
         # 记录开始时间
         start_time = time.time()
+        
+        # 将voice_path转换为绝对路径
+        if not os.path.isabs(voice_path):
+            # 如果是相对路径，拼接成绝对路径
+            if voice_path.startswith('voice/'):
+                voice_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', voice_path)
+            else:
+                voice_path = os.path.abspath(voice_path)
         
         # 初始化TTS模型
         tts = IndexTTS(model_dir=model_dir, cfg_path=f"{model_dir}/config.yaml")
@@ -321,19 +842,36 @@ def generate():
 
 @app.route('/update-note', methods=['POST'])
 def update_note():
-    model_path = request.form.get('model_path')
     voice_name = request.form.get('voice_name')
     note = request.form.get('note')
     
-    if not model_path or not voice_name:
-        return jsonify({"error": "请指定模型路径和音频名称"}), 400
+    if not voice_name:
+        return jsonify({"error": "请指定音频名称"}), 400
     
-    update_voice_note(model_path, voice_name, note)
+    update_voice_note(voice_name, note)
     return jsonify({"success": True})
 
 @app.route('/audio/<path:filename>')
 def get_audio(filename):
-    return send_file(filename)
+    # 检查路径是否已经包含static前缀
+    if filename.startswith('static/'):
+        return send_file(filename)
+    else:
+        # 如果不是从static目录开始的路径，确保添加static前缀
+        # 将音频文件路径映射到static目录下
+        if filename.startswith('voice/'):
+            # 如果是voice路径，确保添加static前缀
+            full_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', filename)
+        else:
+            # 其他情况尝试从根目录加载
+            full_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
+        
+        # 添加错误处理和调试信息
+        if not os.path.exists(full_path):
+            app.logger.error(f"File not found: {full_path}")
+            return jsonify({"error": f"文件未找到: {full_path}"}), 404
+        
+        return send_file(full_path)
 
 @app.route('/get_history', methods=['GET'])
 def get_history():
@@ -624,7 +1162,7 @@ def load_jianying_audio_info(project_dir, project_name, get_all_subtitles=False)
             try:
                 # 解析内容JSON以提取文本
                 content_data = json.loads(content_json)
-                text_content = content_data.get("text", "")
+                text_content = content_data.get('text', '')
                 text_map[text_id] = text_content
             except:
                 text_map[text_id] = ""
@@ -712,7 +1250,7 @@ def replace_jianying_audio(project_dir, project_name, audio_replacements, sync_p
         
         # 创建音频ID到替换路径和时长的映射
         replacement_map = {item['audio_id']: {
-            'path': item['new_audio_path'], 
+            'path': os.path.abspath(item['new_audio_path']), 
             'duration': item['duration']
         } for item in audio_replacements}
         
@@ -999,6 +1537,18 @@ def replace_jianying_audio_route():
         # 记录开始时间
         start_time = time.time()
         
+        # 将voice_path转换为绝对路径
+        if not os.path.isabs(voice_path):
+            # 如果是相对路径，拼接成绝对路径
+            if voice_path.startswith('voice/'):
+                voice_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', voice_path)
+            else:
+                voice_path = os.path.abspath(voice_path)
+        
+        # 检查文件是否存在
+        if not os.path.exists(voice_path):
+            return jsonify({"error": f"音频文件不存在: {voice_path}"}), 400
+        
         # 初始化TTS模型
         tts = IndexTTS(model_dir=model_dir, cfg_path=f"{model_dir}/config.yaml")
         
@@ -1037,17 +1587,20 @@ def replace_jianying_audio_route():
                 audio = AudioSegment.from_file(output_path)
                 duration_us = int(audio.duration_seconds * 1000000)  # 转换为微秒
                 
+                # 转换为绝对路径
+                abs_output_path = os.path.abspath(output_path)
+                
                 # 添加到替换列表
                 audio_replacements.append({
                     'audio_id': audio_id,
-                    'new_audio_path': output_path,
+                    'new_audio_path': abs_output_path,
                     'duration': duration_us
                 })
                 
                 results.append({
                     "id": audio_id,
                     "success": True,
-                    "output_file": output_path,
+                    "output_file": output_path,  # 这里保持相对路径用于前端显示
                     "duration": duration_us
                 })
                 success_count += 1
@@ -1831,9 +2384,211 @@ def check_jianying_path():
     except:
         print("Windown没有该目录,若是其他系统,请自行在填写网页中填写")
 
+@app.route('/get_categories', methods=['GET'])
+def get_categories():
+    """获取所有音频分类"""
+    categories = load_voice_categories()
+    return jsonify(categories)
+
+@app.route('/add_category', methods=['POST'])
+def add_category_route():
+    """添加新的音频分类"""
+    category_id = request.form.get('category_id')
+    category_name = request.form.get('category_name')
+    description = request.form.get('description', '')
+    
+    if not category_id or not category_name:
+        return jsonify({"error": "缺少必要参数"}), 400
+    
+    # 验证分类ID格式
+    if not category_id.isalnum() and not all(c.isalnum() or c == '_' for c in category_id):
+        return jsonify({"error": "分类ID只能包含字母、数字和下划线"}), 400
+    
+    success, message = add_voice_category(category_id, category_name, description)
+    
+    if success:
+        return jsonify({"success": True, "message": message})
+    else:
+        return jsonify({"error": message}), 400
+
+@app.route('/delete_category', methods=['POST'])
+def delete_category_route():
+    """删除音频分类"""
+    category_id = request.form.get('category_id')
+    
+    if not category_id:
+        return jsonify({"error": "缺少必要参数"}), 400
+    
+    success, message = delete_voice_category(category_id)
+    
+    if success:
+        return jsonify({"success": True, "message": message})
+    else:
+        return jsonify({"error": message}), 400
+
+@app.route('/upload_audio', methods=['POST'])
+def upload_audio_route():
+    """上传音频文件"""
+    category_id = request.form.get('category_id')
+    
+    if 'audio_file' not in request.files:
+        return jsonify({"error": "未上传文件"}), 400
+    
+    audio_file = request.files['audio_file']
+    
+    if audio_file.filename == '':
+        return jsonify({"error": "未选择文件"}), 400
+    
+    if not category_id:
+        category_id = "other"  # 默认分类
+    
+    # 检查文件类型，如果不是支持的格式，尝试转换
+    original_filename = audio_file.filename
+    file_ext = os.path.splitext(original_filename)[1].lower()
+    
+    if file_ext not in ['.wav', '.mp3']:
+        try:
+            # 处理文件名，保留中文字符
+            safe_filename = ""
+            for char in original_filename:
+                if char.isalnum() or char in '._- ' or '\u4e00' <= char <= '\u9fff':  # 保留字母数字和中文字符
+                    safe_filename += char
+                else:
+                    safe_filename += '_'
+            
+            # 使用临时文件名避免中文路径问题
+            temp_uuid = str(uuid.uuid4())
+            temp_path = os.path.join(TEMP_DIR, f"{temp_uuid}{file_ext}")
+            audio_file.save(temp_path)
+            
+            # 转换为MP3格式
+            output_filename = os.path.splitext(safe_filename)[0] + ".mp3"
+            output_path = os.path.join(TEMP_DIR, f"{temp_uuid}.mp3")
+            
+            # 使用pydub进行转换
+            try:
+                from pydub import AudioSegment
+                audio = AudioSegment.from_file(temp_path)
+                audio.export(output_path, format="mp3")
+                
+                # 替换原始文件对象
+                with open(output_path, 'rb') as f:
+                    file_content = f.read()
+                
+                # 删除临时文件
+                try:
+                    os.remove(temp_path)
+                    os.remove(output_path)
+                except Exception as e:
+                    print(f"删除临时文件失败: {str(e)}")
+                
+                # 创建新的文件对象
+                from io import BytesIO
+                audio_file = FileStorage(
+                    stream=BytesIO(file_content),
+                    filename=output_filename,
+                    content_type='audio/mpeg'
+                )
+                
+            except Exception as e:
+                # 尝试删除临时文件
+                try:
+                    if os.path.exists(temp_path):
+                        os.remove(temp_path)
+                except:
+                    pass
+                return jsonify({"error": f"格式转换失败: {str(e)}"}), 400
+        except Exception as e:
+            return jsonify({"error": f"处理失败: {str(e)}"}), 400
+    
+    success, message = upload_audio_file(audio_file, category_id)
+    
+    if success:
+        # 重新加载语音列表
+        voices = load_all_voices()
+        return jsonify({"success": True, "message": message, "voices": voices})
+    else:
+        return jsonify({"error": message}), 400
+
+@app.route('/batch_upload_audio', methods=['POST'])
+def batch_upload_audio_route():
+    """批量上传音频文件"""
+    category_id = request.form.get('category_id')
+    
+    if 'audio_files[]' not in request.files:
+        return jsonify({"error": "未上传文件"}), 400
+    
+    audio_files = request.files.getlist('audio_files[]')
+    
+    if not audio_files or all(file.filename == '' for file in audio_files):
+        return jsonify({"error": "未选择文件"}), 400
+    
+    if not category_id:
+        category_id = "other"  # 默认分类
+    
+    # 批量上传
+    result = batch_upload_audio_files(audio_files, category_id)
+    
+    # 重新加载语音列表
+    voices = load_all_voices()
+    
+    return jsonify({
+        "success": True,
+        "message": f"上传完成: 成功 {result['success_count']} 个, 失败 {result['failed_count']} 个",
+        "details": result['results'],
+        "voices": voices
+    })
+
+@app.route('/delete_audio', methods=['POST'])
+def delete_audio_route():
+    """删除音频文件"""
+    filename = request.form.get('filename')
+    
+    if not filename:
+        return jsonify({"error": "未指定文件名"}), 400
+    
+    success, message = delete_audio_file(filename)
+    
+    if success:
+        return jsonify({"success": True, "message": message})
+    else:
+        return jsonify({"error": message}), 400
+
 if __name__ == '__main__':
     # 确保输出目录存在
     os.makedirs(os.path.join("static", "output"), exist_ok=True)
+    
+    # 确保临时目录存在并清空临时文件
+    os.makedirs(TEMP_DIR, exist_ok=True)
+    try:
+        # 清空临时目录中的所有文件
+        for file in os.listdir(TEMP_DIR):
+            file_path = os.path.join(TEMP_DIR, file)
+            try:
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
+            except Exception as e:
+                print(f"无法删除临时文件 {file_path}: {str(e)}")
+    except Exception as e:
+        print(f"清空临时目录失败: {str(e)}")
+    
+    # 检查必要的依赖项
+    try:
+        import pydub
+        print("已安装音频处理库 pydub")
+    except ImportError:
+        print("警告: 未安装音频处理库 pydub，将无法进行音频格式转换")
+        print("请运行: pip install pydub")
+        
+        # 检查ffmpeg
+        try:
+            from pydub.utils import which
+            if which("ffmpeg") is None:
+                print("警告: 未安装 ffmpeg，这是音频转换所必需的")
+                print("请安装 ffmpeg: https://ffmpeg.org/download.html")
+        except:
+            print("警告: 请确保已安装 ffmpeg: https://ffmpeg.org/download.html")
+    
     import webbrowser
     webbrowser.open("http://localhost:5000")
     check_jianying_path()

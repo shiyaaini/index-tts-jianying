@@ -7,6 +7,28 @@
     <!-- 使用本地Bootstrap CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .category-filter {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .category-badge {
+            margin-right: 5px;
+            cursor: pointer;
+        }
+        
+        .category-badge.active {
+            background-color: #0d6efd;
+            color: white;
+        }
+        
+        .voice-row.filtered {
+            display: none;
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -28,6 +50,9 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link tab-link" href="#" data-target="jianyingScriptPanel">剪映文案</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link tab-link" href="#" data-target="audioManagePanel">音频管理</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link tab-link" href="#" data-target="historyPanel">生成记录</a>
@@ -61,6 +86,16 @@
                                 <input type="hidden" id="selectedVoice" name="voice" value="">
                                 
                                 <div class="mb-3">
+                                    <label class="form-label">参考音频分类筛选</label>
+                                    <div class="category-filter">
+                                        <span class="badge rounded-pill bg-secondary category-badge active" data-category="all">全部</span>
+                                        {% for category in voice_categories %}
+                                        <span class="badge rounded-pill bg-secondary category-badge" data-category="{{ category.id }}">{{ category.name }}</span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
                                     <label class="form-label">参考音频列表</label>
                                     <div class="table-responsive-sm mobile-table-container">
                                         <table class="table table-hover table-bordered" id="voiceTable">
@@ -70,12 +105,13 @@
                                                     <th style="min-width:120px">名称</th>
                                                     <th style="min-width:150px">试听</th>
                                                     <th style="min-width:150px">备注</th>
+                                                    <th style="min-width:100px">分类</th>
                                                     <th style="min-width:100px">操作</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 {% for voice in voices %}
-                                                <tr data-voice-path="{{ voice.path }}" data-voice-name="{{ voice.name }}">
+                                                <tr data-voice-path="{{ voice.path }}" data-voice-name="{{ voice.name|urlencode }}" data-category="{{ voice.category }}" class="voice-row">
                                                     <td><input type="radio" name="voiceRadio" class="form-check-input" {% if loop.first %}checked{% endif %}></td>
                                                     <td>{{ voice.name }}</td>
                                                     <td>
@@ -85,7 +121,17 @@
                                                         <input type="text" class="form-control voice-note-input" value="{{ voice.note }}" placeholder="添加备注">
                                                     </td>
                                                     <td>
-                                                        <button type="button" class="btn btn-sm btn-outline-primary save-note-btn">保存备注</button>
+                                                        <select class="form-select form-select-sm voice-category-select">
+                                                            {% for category in voice_categories %}
+                                                            <option value="{{ category.id }}" {% if voice.category == category.id %}selected{% endif %}>{{ category.name }}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </td>
+                                                    <td>
+                                                        <div class="btn-group btn-group-sm" role="group">
+                                                            <button type="button" class="btn btn-sm btn-outline-primary save-note-btn">保存</button>
+                                                            <button type="button" class="btn btn-sm btn-outline-danger delete-audio-btn" data-voice-name="{{ voice.name|urlencode }}">删除</button>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                                 {% endfor %}
@@ -279,6 +325,16 @@
                                 <input type="hidden" id="jianyingSelectedVoice" name="voice" value="">
                                 
                                 <div class="mb-3">
+                                    <label class="form-label">参考音频分类筛选</label>
+                                    <div class="category-filter">
+                                        <span class="badge rounded-pill bg-secondary category-badge active" data-category="all">全部</span>
+                                        {% for category in voice_categories %}
+                                        <span class="badge rounded-pill bg-secondary category-badge" data-category="{{ category.id }}">{{ category.name }}</span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
                                     <label class="form-label">参考音频列表</label>
                                     <div class="table-responsive-sm mobile-table-container">
                                         <table class="table table-hover table-bordered" id="jianyingVoiceTable">
@@ -288,12 +344,13 @@
                                                     <th style="min-width:120px">名称</th>
                                                     <th style="min-width:150px">试听</th>
                                                     <th style="min-width:150px">备注</th>
+                                                    <th style="min-width:100px">分类</th>
                                                     <th style="min-width:100px">操作</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 {% for voice in voices %}
-                                                <tr data-voice-path="{{ voice.path }}" data-voice-name="{{ voice.name }}">
+                                                <tr data-voice-path="{{ voice.path }}" data-voice-name="{{ voice.name|urlencode }}" data-category="{{ voice.category }}" class="voice-row">
                                                     <td><input type="radio" name="jianyingVoiceRadio" class="form-check-input" {% if loop.first %}checked{% endif %}></td>
                                                     <td>{{ voice.name }}</td>
                                                     <td>
@@ -301,6 +358,13 @@
                                                     </td>
                                                     <td>
                                                         <input type="text" class="form-control voice-note-input" value="{{ voice.note }}" placeholder="添加备注">
+                                                    </td>
+                                                    <td>
+                                                        <select class="form-select form-select-sm voice-category-select">
+                                                            {% for category in voice_categories %}
+                                                            <option value="{{ category.id }}" {% if voice.category == category.id %}selected{% endif %}>{{ category.name }}</option>
+                                                            {% endfor %}
+                                                        </select>
                                                     </td>
                                                     <td>
                                                         <button type="button" class="btn btn-sm btn-outline-primary save-note-btn">保存备注</button>
@@ -593,6 +657,154 @@
             </div>
         </div>
         
+        <!-- 音频管理面板 -->
+        <div class="tab-panel" id="audioManagePanel" style="display:none;">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">分类管理</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <form id="addCategoryForm" class="row g-3">
+                                    <div class="col-md-4">
+                                        <label for="categoryId" class="form-label">分类ID</label>
+                                        <input type="text" class="form-control" id="categoryId" name="category_id" placeholder="如：animals" required>
+                                        <div class="form-text">只能包含字母、数字、下划线</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="categoryName" class="form-label">分类名称</label>
+                                        <input type="text" class="form-control" id="categoryName" name="category_name" placeholder="如：动物声音" required>
+                                    </div>
+                                    <div class="col-md-4 d-flex align-items-end">
+                                        <button type="button" class="btn btn-primary w-100" id="addCategoryBtn">添加分类</button>
+                                    </div>
+                                </form>
+                            </div>
+                            
+                            <hr>
+                            
+                            <div class="table-responsive">
+                                <table class="table table-hover table-bordered" id="categoriesTable">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>名称</th>
+                                            <th>描述</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for category in voice_categories %}
+                                        <tr data-category-id="{{ category.id }}">
+                                            <td>{{ category.id }}</td>
+                                            <td>{{ category.name }}</td>
+                                            <td>{{ category.description }}</td>
+                                            <td>
+                                                <button type="button" class="btn btn-sm btn-outline-danger delete-category-btn">删除</button>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card mb-4">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="card-title mb-0">音频上传</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="batchUploadAudioForm" class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="batchAudioFiles" class="form-label">批量上传音频</label>
+                                    <input type="file" class="form-control" id="batchAudioFiles" name="audio_files[]" accept="audio/*" multiple required>
+                                    <div class="form-text">可以选择多个文件一次性上传，支持各种音频格式，将自动转换为MP3或WAV</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="batchUploadCategory" class="form-label">选择分类</label>
+                                    <select class="form-select" id="batchUploadCategory" name="category_id">
+                                        {% for category in voice_categories %}
+                                        <option value="{{ category.id }}">{{ category.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-2 d-flex align-items-end">
+                                    <button type="button" class="btn btn-primary w-100" id="batchUploadBtn">上传音频</button>
+                                </div>
+                            </form>
+                            
+                            <div class="mt-3" id="uploadProgressContainer" style="display: none;">
+                                <div class="progress mb-2">
+                                    <div id="uploadProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                                </div>
+                                <p id="uploadStatusText" class="text-center">正在上传...</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="card-title mb-0">音频列表</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">音频分类筛选</label>
+                                <div class="category-filter">
+                                    <span class="badge rounded-pill bg-secondary category-badge active" data-category="all">全部</span>
+                                    {% for category in voice_categories %}
+                                    <span class="badge rounded-pill bg-secondary category-badge" data-category="{{ category.id }}">{{ category.name }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            
+                            <div class="table-responsive-sm mobile-table-container">
+                                <table class="table table-hover table-bordered" id="audioManageTable">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="min-width:120px">名称</th>
+                                            <th style="min-width:150px">试听</th>
+                                            <th style="min-width:150px">备注</th>
+                                            <th style="min-width:100px">分类</th>
+                                            <th style="min-width:100px">操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for voice in voices %}
+                                        <tr data-voice-path="{{ voice.path }}" data-voice-name="{{ voice.name|urlencode }}" data-category="{{ voice.category }}" class="voice-row">
+                                            <td>{{ voice.name }}</td>
+                                            <td>
+                                                <audio src="/audio/{{ voice.path }}" controls class="audio-player w-100"></audio>
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control voice-note-input" value="{{ voice.note }}" placeholder="添加备注">
+                                            </td>
+                                            <td>
+                                                <select class="form-select form-select-sm voice-category-select">
+                                                    {% for category in voice_categories %}
+                                                    <option value="{{ category.id }}" {% if voice.category == category.id %}selected{% endif %}>{{ category.name }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    <button type="button" class="btn btn-sm btn-outline-primary save-note-btn">保存</button>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger delete-audio-btn" data-voice-name="{{ voice.name|urlencode }}">删除</button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <!-- 生成记录面板 -->
         <div class="tab-panel" id="historyPanel" style="display:none;">
             <div class="row">
@@ -694,6 +906,45 @@
                     <p class="text-muted small">© 2025 文本转语音系统</p>
                     <p class="text-muted small">Powered by <a href="https://github.com/shiyaaini/index-tts-jianying" target="_blank" class="text-decoration-none">index-tts-jianying</a></p>
                     <p class="text-muted small">哔哩哔哩<a href="https://b23.tv/jwLEJzG" target="_blank" class="text-decoration-none"> 浅若红尘</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 确认删除音频模态框 -->
+    <div class="modal fade" id="deleteAudioModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">确认删除</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>确定要删除音频 <span id="deleteAudioName" class="fw-bold"></span> 吗？此操作不可恢复。</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteAudioBtn">删除</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 确认删除分类模态框 -->
+    <div class="modal fade" id="deleteCategoryModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">确认删除分类</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>确定要删除分类 <span id="deleteCategoryName" class="fw-bold"></span> 吗？</p>
+                    <p class="text-danger">分类下的所有音频将移动至"其他"分类。</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteCategoryBtn">删除</button>
                 </div>
             </div>
         </div>
