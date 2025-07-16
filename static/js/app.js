@@ -508,13 +508,8 @@ $(document).ready(function() {
     
     // 添加音频分类
     $('#addCategoryBtn').on('click', function() {
-        const categoryId = $('#categoryId').val();
+        // const categoryId = $('#categoryId').val(); // 已移除
         const categoryName = $('#categoryName').val();
-        
-        if (!categoryId || !categoryId.trim()) {
-            alert('请输入分类ID');
-            return;
-        }
         
         if (!categoryName || !categoryName.trim()) {
             alert('请输入分类名称');
@@ -529,7 +524,7 @@ $(document).ready(function() {
             url: '/add_category',
             type: 'POST',
             data: {
-                category_id: categoryId,
+                // category_id: categoryId, // 已移除
                 category_name: categoryName
             },
             success: function(response) {

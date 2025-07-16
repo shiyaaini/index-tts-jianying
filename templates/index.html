@@ -668,12 +668,7 @@
                         <div class="card-body">
                             <div class="mb-3">
                                 <form id="addCategoryForm" class="row g-3">
-                                    <div class="col-md-4">
-                                        <label for="categoryId" class="form-label">分类ID</label>
-                                        <input type="text" class="form-control" id="categoryId" name="category_id" placeholder="如：animals" required>
-                                        <div class="form-text">只能包含字母、数字、下划线</div>
-                                    </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-8">
                                         <label for="categoryName" class="form-label">分类名称</label>
                                         <input type="text" class="form-control" id="categoryName" name="category_name" placeholder="如：动物声音" required>
                                     </div>
@@ -940,7 +935,6 @@
                 </div>
                 <div class="modal-body">
                     <p>确定要删除分类 <span id="deleteCategoryName" class="fw-bold"></span> 吗？</p>
-                    <p class="text-danger">分类下的所有音频将移动至"其他"分类。</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
