@@ -1,0 +1,112 @@
+{
+  "project_name": "one",
+  "created_time": "2025-08-07T01:40:14.963026",
+  "modified_time": "2025-08-07T23:31:02.443248",
+  "text_segments": [
+    {
+      "id": "b13a66f8-d0ea-44d3-9bfd-07eee9d7e825",
+      "text": "关关雎鸠，在河之洲。\n窈窕淑女，君子好逑。",
+      "duration": 6300,
+      "actual_duration": 5.589333333333333,
+      "audio_path": "D:\\project\\jianying_pyqt5\\output\\one\\20250807_232721_关关雎鸠，在河之洲。窈窕淑女，君子好逑。_b13a66f8.wav"
+    },
+    {
+      "id": "6b18f913-d3b8-4b65-8fef-9428e130f7fc",
+      "text": "参差荇菜，左右流之。\n窈窕淑女，寤寐求之。",
+      "duration": 6300,
+      "actual_duration": 5.888,
+      "audio_path": "D:\\project\\jianying_pyqt5\\output\\one\\20250807_232747_参差荇菜，左右流之。窈窕淑女，寤寐求之。_6b18f913.wav"
+    },
+    {
+      "id": "d4e1157a-834e-4f71-96da-6192a7261ed0",
+      "text": "求之不得，寤寐思服。\n悠哉悠哉，辗转反侧。",
+      "duration": 6300,
+      "actual_duration": 6.4,
+      "audio_path": "D:\\project\\jianying_pyqt5\\output\\one\\20250807_232814_求之不得，寤寐思服。悠哉悠哉，辗转反侧。_d4e1157a.wav"
+    },
+    {
+      "id": "a79d4bbf-1027-41e0-9a66-0708ad1733b1",
+      "text": "参差荇菜，左右采之。\n窈窕淑女，琴瑟友之。\n参差荇菜，左右芼之。",
+      "duration": 9600,
+      "actual_duration": 9.642666666666667,
+      "audio_path": "D:\\project\\jianying_pyqt5\\output\\one\\20250807_232843_参差荇菜，左右采之。窈窕淑女，琴瑟友之。_a79d4bbf.wav"
+    },
+    {
+      "id": "28f19434-ac3f-4f81-a12d-8e584791c028",
+      "text": "窈窕淑女，钟鼓乐之。\n——先秦·诗经·国风·周南《关雎》https://www.gushiwen.cn/shiwenv_4c5705b99143.aspx",
+      "duration": 23100,
+      "actual_duration": 17.365333333333332,
+      "audio_path": "D:\\project\\jianying_pyqt5\\output\\one\\20250807_232929_窈窕淑女，钟鼓乐之。——先秦·诗经·国风_28f19434.wav"
+    }
+  ],
+  "voice_configs": {},
+  "output_settings": {
+    "format": "wav",
+    "sample_rate": 44100,
+    "channels": 1,
+    "gap_duration": 0.03,
+    "add_silence_gap": true
+  },
+  "text_configs": {
+    "b13a66f8-d0ea-44d3-9bfd-07eee9d7e825": {
+      "reference_voice": "files\\原神\\派蒙.mp3",
+      "infer_mode": "普通推理",
+      "tts_params": {
+        "do_sample": true,
+        "temperature": 1.0,
+        "top_p": 0.8,
+        "top_k": 30,
+        "num_beams": 3,
+        "repetition_penalty": 10.0
+      }
+    },
+    "6b18f913-d3b8-4b65-8fef-9428e130f7fc": {
+      "reference_voice": "files\\原神\\派蒙.mp3",
+      "infer_mode": "普通推理",
+      "tts_params": {
+        "do_sample": true,
+        "temperature": 1.0,
+        "top_p": 0.8,
+        "top_k": 30,
+        "num_beams": 3,
+        "repetition_penalty": 10.0
+      }
+    },
+    "d4e1157a-834e-4f71-96da-6192a7261ed0": {
+      "reference_voice": "files\\原神\\派蒙.mp3",
+      "infer_mode": "普通推理",
+      "tts_params": {
+        "do_sample": true,
+        "temperature": 1.0,
+        "top_p": 0.8,
+        "top_k": 30,
+        "num_beams": 3,
+        "repetition_penalty": 10.0
+      }
+    },
+    "a79d4bbf-1027-41e0-9a66-0708ad1733b1": {
+      "reference_voice": "files\\原神\\派蒙.mp3",
+      "infer_mode": "普通推理",
+      "tts_params": {
+        "do_sample": true,
+        "temperature": 1.0,
+        "top_p": 0.8,
+        "top_k": 30,
+        "num_beams": 3,
+        "repetition_penalty": 10.0
+      }
+    },
+    "28f19434-ac3f-4f81-a12d-8e584791c028": {
+      "reference_voice": "files\\原神\\派蒙.mp3",
+      "infer_mode": "普通推理",
+      "tts_params": {
+        "do_sample": true,
+        "temperature": 1.0,
+        "top_p": 0.8,
+        "top_k": 30,
+        "num_beams": 3,
+        "repetition_penalty": 10.0
+      }
+    }
+  }
+}

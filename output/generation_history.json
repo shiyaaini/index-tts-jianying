@@ -1,0 +1,66 @@
+[
+  {
+    "timestamp": "2025-08-07T00:20:30.978547",
+    "project_name": "two",
+    "text_count": 11,
+    "audio_path": "C:/Users/shiya/Desktop/two_合成音频_20250807_002023.wav",
+    "subtitle_files": []
+  },
+  {
+    "timestamp": "2025-08-07T01:46:31.533367",
+    "project_name": "one",
+    "text_count": 11,
+    "audio_path": "C:/Users/shiya/Desktop/one_合成音频_20250807_014622.wav",
+    "subtitle_files": []
+  },
+  {
+    "timestamp": "2025-08-07T02:09:46.881139",
+    "project_name": "one",
+    "text_count": 11,
+    "audio_path": "C:/Users/shiya/Desktop/one_合成音频_20250807_020938.wav",
+    "subtitle_files": [
+      "C:/Users/shiya/Desktop\\one_合成音频_20250807_020938.srt",
+      "C:/Users/shiya/Desktop\\one_合成音频_20250807_020938.ass",
+      "C:/Users/shiya/Desktop\\one_合成音频_20250807_020938.lrc"
+    ]
+  },
+  {
+    "timestamp": "2025-08-07T02:10:32.212888",
+    "project_name": "one",
+    "text_count": 11,
+    "audio_path": "C:/Users/shiya/Desktop/one_合成音频_20250807_021026.wav",
+    "subtitle_files": [
+      "C:/Users/shiya/Desktop\\one_合成音频_20250807_021026.srt",
+      "C:/Users/shiya/Desktop\\one_合成音频_20250807_021026.ass",
+      "C:/Users/shiya/Desktop\\one_合成音频_20250807_021026.lrc"
+    ]
+  },
+  {
+    "timestamp": "2025-08-07T02:19:29.511920",
+    "project_name": "one",
+    "text_count": 11,
+    "audio_path": "C:/Users/shiya/Desktop/one_合成音频_20250807_021919.wav",
+    "subtitle_files": []
+  },
+  {
+    "timestamp": "2025-08-07T23:31:40.672073",
+    "project_name": "one",
+    "text_count": 5,
+    "audio_path": "D:/project/jianying_pyqt5/output/one/one_合成音频_20250807_233135.wav",
+    "subtitle_files": []
+  },
+  {
+    "timestamp": "2025-08-07T23:38:54.710957",
+    "project_name": "one",
+    "text_count": 5,
+    "audio_path": "C:/Users/shiya/Desktop/one_合成音频_20250807_233848.wav",
+    "subtitle_files": []
+  },
+  {
+    "timestamp": "2025-08-08T10:22:18.543523",
+    "project_name": "1111",
+    "text_count": 21,
+    "audio_path": "C:/Users/Administrator/Desktop/1111_合成音频_20250808_102209.wav",
+    "subtitle_files": []
+  }
+]

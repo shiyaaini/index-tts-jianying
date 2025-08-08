@@ -1,0 +1,397 @@
+{
+  "project_name": "1111",
+  "created_time": "2025-08-08T10:19:08.598498",
+  "modified_time": "2025-08-08T10:24:01.001359",
+  "text_segments": [
+    {
+      "id": "aa9e5a4a-4b71-47dd-9807-3e6c7dc7dc67",
+      "text": "庆历四年春，滕子京谪守巴陵郡。\n越明年，政通人和，百废具兴，乃重修岳阳楼，增其旧制，刻唐贤今人诗赋于其上，属予作文以记之。",
+      "duration": 18300,
+      "actual_duration": 3.498666666666667,
+      "audio_path": "D:\\project\\jianying_pyqt5\\output\\1111\\20250808_102045_庆历四年春，滕子京谪守巴陵郡。_aa9e5a4a.wav"
+    },
+    {
+      "id": "a83a5e0c-8bf6-4bd0-90fd-0908b5277d32",
+      "text": "(具 通：俱)　　予观夫巴陵胜状，在洞庭一湖。",
+      "duration": 6900,
+      "actual_duration": 4.394666666666667,
+      "audio_path": "D:\\project\\jianying_pyqt5\\output\\1111\\20250808_102054_(具_通：俱)_予观夫巴陵胜状，在洞庭一_a83a5e0c.wav"
+    },
+    {
+      "id": "2a201856-ae71-41bd-ae6d-b1c222198d74",
+      "text": "衔远山，吞长江，浩浩汤汤，横无际涯，朝晖夕阴，气象万千，此则岳阳楼之大观也，前人之述备矣。",
+      "duration": 13500,
+      "actual_duration": 14.037333333333333,
+      "audio_path": "D:\\project\\jianying_pyqt5\\output\\1111\\20250808_102056_衔远山，吞长江，浩浩汤汤，横无际涯，朝晖_2a201856.wav"
+    },
+    {
+      "id": "42fe096d-bce5-4b75-ab6a-e324ac28398f",
+      "text": "然则北通巫峡，南极潇湘，迁客骚人，多会于此，览物之情，得无异乎？",
+      "duration": 9600,
+      "actual_duration": 7.936,
+      "audio_path": "D:\\project\\jianying_pyqt5\\output\\1111\\20250808_102104_然则北通巫峡，南极潇湘，迁客骚人，多会于_42fe096d.wav"
+    },
+    {
+      "id": "63ee7c82-649b-46a6-badc-99a834ae70b0",
+      "text": "若夫淫雨霏霏，连月不开，阴风怒号，浊浪排空，日星隐曜，山岳潜形，商旅不行，樯倾楫摧，薄暮冥冥，虎啸猿啼。",
+      "duration": 15600,
+      "actual_duration": 14.805333333333333,
+      "audio_path": "D:\\project\\jianying_pyqt5\\output\\1111\\20250808_102108_若夫淫雨霏霏，连月不开，阴风怒号，浊浪排_63ee7c82.wav"
+    },
+    {
+      "id": "4079f21e-2591-493a-a200-d7759921e53f",
+      "text": "登斯楼也，则有去国怀乡，忧谗畏讥，满目萧然，感极而悲者矣。",
+      "duration": 8700,
+      "actual_duration": 8.064,
+      "audio_path": "D:\\project\\jianying_pyqt5\\output\\1111\\20250808_102116_登斯楼也，则有去国怀乡，忧谗畏讥，满目萧_4079f21e.wav"
+    },
+    {
+      "id": "eaa861cd-6c0d-4596-a447-f45a9a36c922",
+      "text": "(隐曜 一作：隐耀；",
+      "duration": 3000,
+      "actual_duration": 3.541333333333333,
+      "audio_path": "D:\\project\\jianying_pyqt5\\output\\1111\\20250808_102120_(隐曜_一作：隐耀；_eaa861cd.wav"
+    },
+    {
+      "id": "3b9743d6-4102-4a1d-9929-96c505f8c1ab",
+      "text": "淫雨 通：霪雨)　　至若春和景明，波澜不惊，上下天光，一碧万顷，沙鸥翔集，锦鳞游泳，岸芷汀兰，郁郁青青。",
+      "duration": 15600,
+      "actual_duration": 13.312,
+      "audio_path": "D:\\project\\jianying_pyqt5\\output\\1111\\20250808_102122_淫雨_通：霪雨)_至若春和景明，波澜不惊_3b9743d6.wav"
+    },
+    {
+      "id": "ffd90573-78de-4444-89bb-95c489fd25e0",
+      "text": "而或长烟一空，皓月千里，浮光跃金，静影沉璧，渔歌互答，此乐何极！",
+      "duration": 9600,
+      "actual_duration": 8.704,
+      "audio_path": "D:\\project\\jianying_pyqt5\\output\\1111\\20250808_102129_而或长烟一空，皓月千里，浮光跃金，静影沉_ffd90573.wav"
+    },
+    {
+      "id": "ffc909df-1cef-42ed-93f6-49b3f2c571d5",
+      "text": "登斯楼也，则有心旷神怡，宠辱偕忘，把酒临风，其喜洋洋者矣。",
+      "duration": 8700,
+      "actual_duration": 8.149333333333333,
+      "audio_path": "D:\\project\\jianying_pyqt5\\output\\1111\\20250808_102134_登斯楼也，则有心旷神怡，宠辱偕忘，把酒临_ffc909df.wav"
+    },
+    {
+      "id": "f138e454-39fb-45e5-a484-3ecb8cd5ebfb",
+      "text": "嗟夫！",
+      "duration": 900,
+      "actual_duration": 0.5973333333333334,
+      "audio_path": "D:\\project\\jianying_pyqt5\\output\\1111\\20250808_102138_嗟夫！_f138e454.wav"
+    },
+    {
+      "id": "c3304834-adde-4a38-9b21-03f93add3969",
+      "text": "予尝求古仁人之心，或异二者之为，何哉？",
+      "duration": 5700,
+      "actual_duration": 4.992,
+      "audio_path": "D:\\project\\jianying_pyqt5\\output\\1111\\20250808_102139_予尝求古仁人之心，或异二者之为，何哉？_c3304834.wav"
+    },
+    {
+      "id": "82f64efa-44c8-4289-b1a8-9d4f52dddeb8",
+      "text": "不以物喜，不以己悲，居庙堂之高则忧其民，处江湖之远则忧其君。",
+      "duration": 9000,
+      "actual_duration": 8.576,
+      "audio_path": "D:\\project\\jianying_pyqt5\\output\\1111\\20250808_102141_不以物喜，不以己悲，居庙堂之高则忧其民，_82f64efa.wav"
+    },
+    {
+      "id": "1f94cca4-58bb-4fa3-8429-32311951d222",
+      "text": "是进亦忧，退亦忧。",
+      "duration": 2700,
+      "actual_duration": 3.456,
+      "audio_path": "D:\\project\\jianying_pyqt5\\output\\1111\\20250808_102146_是进亦忧，退亦忧。_1f94cca4.wav"
+    },
+    {
+      "id": "c150ec58-e5cd-4ba3-aef0-a5df8d61e4be",
+      "text": "然则何时而乐耶？",
+      "duration": 2400,
+      "actual_duration": 1.8773333333333333,
+      "audio_path": "D:\\project\\jianying_pyqt5\\output\\1111\\20250808_102148_然则何时而乐耶？_c150ec58.wav"
+    },
+    {
+      "id": "8c67754f-5b57-4c16-a279-6104a16b6d5b",
+      "text": "其必曰：“先天下之忧而忧，后天下之乐而乐”乎！",
+      "duration": 6900,
+      "actual_duration": 5.290666666666667,
+      "audio_path": "D:\\project\\jianying_pyqt5\\output\\1111\\20250808_102149_其必曰：“先天下之忧而忧，后天下之乐而乐_8c67754f.wav"
+    },
+    {
+      "id": "d415f682-f522-4518-a1f5-1b6159f31892",
+      "text": "噫！",
+      "duration": 600,
+      "actual_duration": 0.384,
+      "audio_path": "D:\\project\\jianying_pyqt5\\output\\1111\\20250808_102152_噫！_d415f682.wav"
+    },
+    {
+      "id": "f03f688f-27d4-4601-9853-3da1d1fb6d70",
+      "text": "微斯人，吾谁与归？",
+      "duration": 2700,
+      "actual_duration": 3.4133333333333336,
+      "audio_path": "D:\\project\\jianying_pyqt5\\output\\1111\\20250808_102152_微斯人，吾谁与归？_f03f688f.wav"
+    },
+    {
+      "id": "4481bd5d-7060-48bc-a559-d34191ee680c",
+      "text": "时六年九月十五日。",
+      "duration": 2700,
+      "actual_duration": 1.9626666666666666,
+      "audio_path": "D:\\project\\jianying_pyqt5\\output\\1111\\20250808_102154_时六年九月十五日。_4481bd5d.wav"
+    },
+    {
+      "id": "24216221-0d7c-47ab-a93c-9827a84cea96",
+      "text": "——宋代·范仲淹《岳阳楼记》https://www.gushiwen.cn/shiwenv_f3d6556dbcad.aspx",
+      "duration": 18900,
+      "actual_duration": 13.184,
+      "audio_path": "D:\\project\\jianying_pyqt5\\output\\1111\\20250808_102155_——宋代·范仲淹《岳阳楼记》httpsw_24216221.wav"
+    }
+  ],
+  "voice_configs": {},
+  "output_settings": {
+    "format": "wav",
+    "sample_rate": 44100,
+    "channels": 1,
+    "gap_duration": 0.03,
+    "add_silence_gap": true
+  },
+  "text_configs": {
+    "aa9e5a4a-4b71-47dd-9807-3e6c7dc7dc67": {
+      "reference_voice": "files\\原神\\胡桃.mp3",
+      "infer_mode": "普通推理",
+      "tts_params": {
+        "do_sample": true,
+        "temperature": 1.0,
+        "top_p": 0.8,
+        "top_k": 30,
+        "num_beams": 3,
+        "repetition_penalty": 10.0
+      }
+    },
+    "a83a5e0c-8bf6-4bd0-90fd-0908b5277d32": {
+      "reference_voice": "files\\原神\\胡桃.mp3",
+      "infer_mode": "普通推理",
+      "tts_params": {
+        "do_sample": true,
+        "temperature": 1.0,
+        "top_p": 0.8,
+        "top_k": 30,
+        "num_beams": 3,
+        "repetition_penalty": 10.0
+      }
+    },
+    "2a201856-ae71-41bd-ae6d-b1c222198d74": {
+      "reference_voice": "files\\原神\\胡桃.mp3",
+      "infer_mode": "普通推理",
+      "tts_params": {
+        "do_sample": true,
+        "temperature": 1.0,
+        "top_p": 0.8,
+        "top_k": 30,
+        "num_beams": 3,
+        "repetition_penalty": 10.0
+      }
+    },
+    "42fe096d-bce5-4b75-ab6a-e324ac28398f": {
+      "reference_voice": "files\\原神\\胡桃.mp3",
+      "infer_mode": "普通推理",
+      "tts_params": {
+        "do_sample": true,
+        "temperature": 1.0,
+        "top_p": 0.8,
+        "top_k": 30,
+        "num_beams": 3,
+        "repetition_penalty": 10.0
+      }
+    },
+    "63ee7c82-649b-46a6-badc-99a834ae70b0": {
+      "reference_voice": "files\\原神\\胡桃.mp3",
+      "infer_mode": "普通推理",
+      "tts_params": {
+        "do_sample": true,
+        "temperature": 1.0,
+        "top_p": 0.8,
+        "top_k": 30,
+        "num_beams": 3,
+        "repetition_penalty": 10.0
+      }
+    },
+    "4079f21e-2591-493a-a200-d7759921e53f": {
+      "reference_voice": "files\\原神\\胡桃.mp3",
+      "infer_mode": "普通推理",
+      "tts_params": {
+        "do_sample": true,
+        "temperature": 1.0,
+        "top_p": 0.8,
+        "top_k": 30,
+        "num_beams": 3,
+        "repetition_penalty": 10.0
+      }
+    },
+    "eaa861cd-6c0d-4596-a447-f45a9a36c922": {
+      "reference_voice": "files\\原神\\胡桃.mp3",
+      "infer_mode": "普通推理",
+      "tts_params": {
+        "do_sample": true,
+        "temperature": 1.0,
+        "top_p": 0.8,
+        "top_k": 30,
+        "num_beams": 3,
+        "repetition_penalty": 10.0
+      }
+    },
+    "3b9743d6-4102-4a1d-9929-96c505f8c1ab": {
+      "reference_voice": "files\\原神\\胡桃.mp3",
+      "infer_mode": "普通推理",
+      "tts_params": {
+        "do_sample": true,
+        "temperature": 1.0,
+        "top_p": 0.8,
+        "top_k": 30,
+        "num_beams": 3,
+        "repetition_penalty": 10.0
+      }
+    },
+    "ffd90573-78de-4444-89bb-95c489fd25e0": {
+      "reference_voice": "files\\原神\\胡桃.mp3",
+      "infer_mode": "普通推理",
+      "tts_params": {
+        "do_sample": true,
+        "temperature": 1.0,
+        "top_p": 0.8,
+        "top_k": 30,
+        "num_beams": 3,
+        "repetition_penalty": 10.0
+      }
+    },
+    "ffc909df-1cef-42ed-93f6-49b3f2c571d5": {
+      "reference_voice": "files\\原神\\胡桃.mp3",
+      "infer_mode": "普通推理",
+      "tts_params": {
+        "do_sample": true,
+        "temperature": 1.0,
+        "top_p": 0.8,
+        "top_k": 30,
+        "num_beams": 3,
+        "repetition_penalty": 10.0
+      }
+    },
+    "f138e454-39fb-45e5-a484-3ecb8cd5ebfb": {
+      "reference_voice": "files\\原神\\胡桃.mp3",
+      "infer_mode": "普通推理",
+      "tts_params": {
+        "do_sample": true,
+        "temperature": 1.0,
+        "top_p": 0.8,
+        "top_k": 30,
+        "num_beams": 3,
+        "repetition_penalty": 10.0
+      }
+    },
+    "c3304834-adde-4a38-9b21-03f93add3969": {
+      "reference_voice": "files\\原神\\胡桃.mp3",
+      "infer_mode": "普通推理",
+      "tts_params": {
+        "do_sample": true,
+        "temperature": 1.0,
+        "top_p": 0.8,
+        "top_k": 30,
+        "num_beams": 3,
+        "repetition_penalty": 10.0
+      }
+    },
+    "82f64efa-44c8-4289-b1a8-9d4f52dddeb8": {
+      "reference_voice": "files\\原神\\胡桃.mp3",
+      "infer_mode": "普通推理",
+      "tts_params": {
+        "do_sample": true,
+        "temperature": 1.0,
+        "top_p": 0.8,
+        "top_k": 30,
+        "num_beams": 3,
+        "repetition_penalty": 10.0
+      }
+    },
+    "1f94cca4-58bb-4fa3-8429-32311951d222": {
+      "reference_voice": "files\\原神\\胡桃.mp3",
+      "infer_mode": "普通推理",
+      "tts_params": {
+        "do_sample": true,
+        "temperature": 1.0,
+        "top_p": 0.8,
+        "top_k": 30,
+        "num_beams": 3,
+        "repetition_penalty": 10.0
+      }
+    },
+    "c150ec58-e5cd-4ba3-aef0-a5df8d61e4be": {
+      "reference_voice": "files\\原神\\胡桃.mp3",
+      "infer_mode": "普通推理",
+      "tts_params": {
+        "do_sample": true,
+        "temperature": 1.0,
+        "top_p": 0.8,
+        "top_k": 30,
+        "num_beams": 3,
+        "repetition_penalty": 10.0
+      }
+    },
+    "8c67754f-5b57-4c16-a279-6104a16b6d5b": {
+      "reference_voice": "files\\原神\\胡桃.mp3",
+      "infer_mode": "普通推理",
+      "tts_params": {
+        "do_sample": true,
+        "temperature": 1.0,
+        "top_p": 0.8,
+        "top_k": 30,
+        "num_beams": 3,
+        "repetition_penalty": 10.0
+      }
+    },
+    "d415f682-f522-4518-a1f5-1b6159f31892": {
+      "reference_voice": "files\\原神\\胡桃.mp3",
+      "infer_mode": "普通推理",
+      "tts_params": {
+        "do_sample": true,
+        "temperature": 1.0,
+        "top_p": 0.8,
+        "top_k": 30,
+        "num_beams": 3,
+        "repetition_penalty": 10.0
+      }
+    },
+    "f03f688f-27d4-4601-9853-3da1d1fb6d70": {
+      "reference_voice": "files\\原神\\胡桃.mp3",
+      "infer_mode": "普通推理",
+      "tts_params": {
+        "do_sample": true,
+        "temperature": 1.0,
+        "top_p": 0.8,
+        "top_k": 30,
+        "num_beams": 3,
+        "repetition_penalty": 10.0
+      }
+    },
+    "4481bd5d-7060-48bc-a559-d34191ee680c": {
+      "reference_voice": "files\\原神\\胡桃.mp3",
+      "infer_mode": "普通推理",
+      "tts_params": {
+        "do_sample": true,
+        "temperature": 1.0,
+        "top_p": 0.8,
+        "top_k": 30,
+        "num_beams": 3,
+        "repetition_penalty": 10.0
+      }
+    },
+    "24216221-0d7c-47ab-a93c-9827a84cea96": {
+      "reference_voice": "files\\原神\\胡桃.mp3",
+      "infer_mode": "普通推理",
+      "tts_params": {
+        "do_sample": true,
+        "temperature": 1.0,
+        "top_p": 0.8,
+        "top_k": 30,
+        "num_beams": 3,
+        "repetition_penalty": 10.0
+      }
+    }
+  }
+}

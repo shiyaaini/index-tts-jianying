@@ -1,4 +1,11 @@
 {
-    "jianying_project_dir": "C:\\Users\\Administrator\\AppData\\Local\\JianyingPro\\User Data\\Projects\\com.lveditor.draft",
-    "deepseek_api_key": ""
+  "project_directory": "C:\\Users\\Administrator\\AppData\\Local\\JianyingPro\\User Data\\Projects\\com.lveditor.draft",
+  "current_project": "C:\\Users\\Administrator\\AppData\\Local\\JianyingPro\\User Data\\Projects\\com.lveditor.draft\\8月8日 (2)",
+  "recent_projects": [
+    "C:\\Users\\Administrator\\AppData\\Local\\JianyingPro\\User Data\\Projects\\com.lveditor.draft\\8月8日 (2)",
+    "C:\\Users\\Administrator\\AppData\\Local\\JianyingPro\\User Data\\Projects\\com.lveditor.draft\\8月8日 (1)",
+    "C:\\Users\\Administrator\\AppData\\Local\\JianyingPro\\User Data\\Projects\\com.lveditor.draft\\8月8日"
+  ],
+  "theme": "auto",
+  "auto_backup": true
 }

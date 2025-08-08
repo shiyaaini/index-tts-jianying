@@ -7,15 +7,16 @@ set "ROOT_DIR=%~dp0"
 :: 检查路径结尾是否有反斜杠，确保路径格式正确
 if "!ROOT_DIR:~-1!"=="\" set "ROOT_DIR=!ROOT_DIR:~0,-1!"
 
-:: 添加ffmpeg到环境变量
-set "PATH=%PATH%;!ROOT_DIR!\ffmpeg\bin"
-echo FFmpeg环境变量已设置: !ROOT_DIR!\ffmpeg\bin
-
 :: 执行Python程序
 echo 正在启动程序...
 echo 项目路径: !ROOT_DIR!
 cd /d "!ROOT_DIR!"
-.\python10\python.exe app.py
+
+:: 设置PYTHONPATH环境变量，添加当前目录到Python模块搜索路径
+set "PYTHONPATH=!ROOT_DIR!;!PYTHONPATH!"
+
+:: 运行Python程序
+.\python10\python.exe main.py
 
 :: 程序结束后暂停
 echo.
